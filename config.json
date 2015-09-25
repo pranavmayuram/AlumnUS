@@ -1,6 +1,11 @@
 {
-    "couchbase": {
+    "setup": {
         "server": "127.0.0.1:8091",
-        "TouchbasePort": 3000
+        "AlumnUSPort": 4300
+    },
+    "fbAuth": {
+    	"client_id": "",
+    	"client_secret": ""
+
     }
 }

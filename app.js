@@ -31,7 +31,7 @@ var routes = require("./routes/routes.js")(app);
 
 // set up HTTP and HTTPS if possible
 var httpServer = http.createServer(app);
-httpServer.listen(config.couchbase.TouchbasePort);
+httpServer.listen(config.setup.AlumnUSPort);
 
 // inform user of IP                     
-console.log('View Touchbase at localhost:' + config.couchbase.TouchbasePort);
+console.log('View Touchbase at localhost:' + config.setup.AlumnUSPort);
