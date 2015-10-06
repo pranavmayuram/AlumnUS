@@ -1,11 +1,19 @@
 var uuid        = require("uuid");
 var async       = require("async");
-// var Linkedin 	= require('node-linkedin')('api', 'secret', 'callback');
-// var linkedin 	= Linkedin.init('CrmEPV92cLdVFoBA');
+
 var graph 		= require('fbgraph');
 var request     = require('request');
 var config      = require('../config.json');
-/*var bucket      = require("../app.js").bucket;
+var pipl        = require('pipl')(config.piplKey);
+var fs          = require('fs');
+
+
+var node_xj = require("xls-to-json");
+
+// LEGACY
+/*var Linkedin     = require('node-linkedin')('api', 'secret', 'callback');
+var linkedin     = Linkedin.init('CrmEPV92cLdVFoBA');
+var bucket      = require("../app.js").bucket;
 var couchbase   = require('couchbase');
 var N1qlQuery   = require('couchbase').N1qlQuery;*/
 
@@ -30,11 +38,54 @@ var appRouter = function(app) {
                 result = result.replace('access_token=', '');
                 console.log(result);
                 graph.setAccessToken(result);
-                graph.get("zuck", function(err, res) {
-                    console.log(res); // { id: '4', name: 'Mark Zuckerberg'... }
+                graph.get("zuck", function(err, resp) {
+                    console.log(resp);
+                    res.send(resp); // { id: '4', name: 'Mark Zuckerberg'... }
                 });
             }
         });
+    });
+
+    app.get("/api/piplTry", function(req, res) {
+        pipl.search.query({"raw_name": "Pranav Mayuram",}, function(err, data) {
+            // Here you go 
+            if (err) {
+                console.log("error: ");
+                console.log(err);
+            }
+            else {
+                console.log("data: ");
+                if (data.possible_persons && data.possible_persons[0]) {
+                    var obj = data.possible_persons[0];
+                    Object.keys(obj).forEach(function(key) {
+                        if (key != '@search_pointer') {
+                            console.log(key, obj[key]);
+                        }
+                    });
+                }
+                else {
+                    console.log(data);
+                }
+                //console.log(data.possible_persons[0]);
+            }
+        });
+    });
+
+    app.get("/api/excel2json", function(req, res) {
+
+        node_xj({
+            input: "ExcelSampleRetry.xls",  // input xls 
+            output: null, // output json 
+            sheet: "Sheet1",  // specific sheetname 
+        }, function(err, result) {
+            if(err) {
+              console.error(err);
+            } else {
+              console.log(result);
+              res.json(result);
+            }
+        });
+
     });
 };
 

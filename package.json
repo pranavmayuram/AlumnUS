@@ -12,6 +12,7 @@
     "fbgraph": "^1.1.0",
     "gulp": "~3.9.0",
     "http": "^0.0.0",
+    "json2xls": "0.0.5",
     "moment": "^2.10.6",
     "morgan": "~1.2.2",
     "node-forge": "^0.6.30",
@@ -19,7 +20,9 @@
     "nodemailer": "^1.4.0",
     "nodemailer-sendgrid-transport": "^0.2.0",
     "nodemon": "^1.4.0",
+    "pipl": "^0.1.1",
     "request": "^2.63.0",
-    "uuid": "^2.0.1"
+    "uuid": "^2.0.1",
+    "xls-to-json": "^0.3.2"
   }
 }

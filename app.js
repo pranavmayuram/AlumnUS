@@ -34,4 +34,4 @@ var httpServer = http.createServer(app);
 httpServer.listen(config.setup.AlumnUSPort);
 
 // inform user of IP                     
-console.log('View Touchbase at localhost:' + config.setup.AlumnUSPort);
+console.log('View AlumnUS at localhost:' + config.setup.AlumnUSPort);
