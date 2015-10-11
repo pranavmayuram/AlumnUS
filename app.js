@@ -6,6 +6,22 @@ var bodyParser      = require('body-parser');
 var morgan          = require('morgan');
 var fs              = require('fs');
 var http            = require('http');
+var multer          = require("multer");
+
+var upload          = multer({dest: './uploads/', 
+    onFileUploadStart: function (file) {
+      console.log(file.originalname + ' is starting ...')
+    },
+    onFileUploadComplete: function (file) {
+      console.log(file.fieldname + ' uploaded to  ' + file.path)
+      done=true;
+    },
+    limits: {
+      fieldNameSize: 100,
+      fileSize: 20000000,
+      files: 1
+    }
+});
 
 // use commands
 app.use(bodyParser.urlencoded({extended:true, limit: '4mb'}));
@@ -19,6 +35,24 @@ app.use(express.static(__dirname + '/uploads'));
 app.use(express.static(__dirname + '/icons'));
 app.use(express.static(__dirname + '/bower_components'));
 app.use(express.static(__dirname + '/node_modules'));
+app.use(express.static(__dirname + '/JSON'));
+
+// multer setup for excel upload
+/*
+app.use(multer({dest: './uploads/', 
+    onFileUploadStart: function (file) {
+      console.log(file.originalname + ' is starting ...')
+    },
+    onFileUploadComplete: function (file) {
+      console.log(file.fieldname + ' uploaded to  ' + file.path)
+      done=true;
+    },
+    limits: {
+      fieldNameSize: 100,
+      fileSize: 20000000,
+      files: 1
+    }
+}); */
 
 /* create cluster and create buckets using config file
 var cluster = new couchbase.Cluster(config.couchbase.server);

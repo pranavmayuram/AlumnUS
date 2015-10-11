@@ -1,21 +1,29 @@
 var uuid        = require("uuid");
 var async       = require("async");
-
+var multer      = require("multer");
 var graph 		= require('fbgraph');
 var request     = require('request');
 var config      = require('../config.json');
 var pipl        = require('pipl')(config.piplKey);
 var fs          = require('fs');
+var node_xj     = require("xls-to-json");
+var Excel       = require("../models/excelmodel");
 
+var upload      = multer({dest: './uploads/', 
+    onFileUploadStart: function (file) {
+      console.log(file.originalname + ' is starting ...')
+    },
+    onFileUploadComplete: function (file) {
+      console.log(file.fieldname + ' uploaded to  ' + file.path)
+      done=true;
+    },
+    limits: {
+      fieldNameSize: 100,
+      fileSize: 20000000,
+      files: 1
+    }
+});
 
-var node_xj = require("xls-to-json");
-
-// LEGACY
-/*var Linkedin     = require('node-linkedin')('api', 'secret', 'callback');
-var linkedin     = Linkedin.init('CrmEPV92cLdVFoBA');
-var bucket      = require("../app.js").bucket;
-var couchbase   = require('couchbase');
-var N1qlQuery   = require('couchbase').N1qlQuery;*/
 
 var options = {
     timeout:  3000
@@ -71,8 +79,7 @@ var appRouter = function(app) {
         });
     });
 
-    app.get("/api/excel2json", function(req, res) {
-
+    /*app.get("/api/excel2json", function(req, res) {
         node_xj({
             input: "ExcelSampleRetry.xls",  // input xls 
             output: null, // output json 
@@ -86,6 +93,28 @@ var appRouter = function(app) {
             }
         });
 
+    });*/
+
+    app.post("/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
+        console.log("endpoint hit");
+        console.log(req.body);
+        console.log(req.file);
+        // var x = {"sheetname": "Sheet1", "path": "ExcelSampleRetry.xls"};
+
+        Excel.upload(req.body, req.file, function(error, result) {
+            if (error) {
+                console.log(error);
+                return res.send(error);
+            }
+            console.log(result);
+            return res.send('woot');
+        })
+
+    });
+
+    app.get('/', function(req, res) {
+            console.log("getting to index.html"); // load the single view file (angular will handle the page changes on the front-end)
+            res.sendfile('index.html');
     });
 };
 
