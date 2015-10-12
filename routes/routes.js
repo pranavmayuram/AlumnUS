@@ -8,6 +8,7 @@ var pipl        = require('pipl')(config.piplKey);
 var fs          = require('fs');
 var node_xj     = require("xls-to-json");
 var Excel       = require("../models/excelmodel");
+var Pipl        = require("../models/piplmodel");
 
 var upload      = multer({dest: './uploads/', 
     onFileUploadStart: function (file) {
@@ -101,15 +102,22 @@ var appRouter = function(app) {
         console.log(req.file);
         // var x = {"sheetname": "Sheet1", "path": "ExcelSampleRetry.xls"};
 
-        Excel.upload(req.body, req.file, function(error, result) {
+        Excel.upload(req.body, req.file, function(error, JSONfilename) {
             if (error) {
                 console.log(error);
                 return res.send(error);
             }
-            console.log(result);
-            return res.send('woot');
-        })
+            console.log(JSONfilename);
 
+            Pipl.searchJSONfile(JSONfilename, req.body, function(err, JSONresults) {
+                if (err) {
+                    console.log(err);
+                    return res.send(err);
+                }
+                return res.send('pipldone');
+            });
+            // return res.send('woot');
+        });
     });
 
     app.get('/', function(req, res) {
