@@ -24,7 +24,8 @@ Excel.upload = function(params, fileInfo, callback) {
         }
         else {
         	var jsonpath = "./JSON/alumnus_" + uuid.v1() + ".json";
-        	node_xj({
+        	
+            var node_excel = node_xj({
 	            input: fileInfo.path,  // input xls 
 	            output: jsonpath, // output json 			// can this be exported to a variable? (can also do from a file if need be)
 	            sheet: params.sheetname  // specific sheetname 
