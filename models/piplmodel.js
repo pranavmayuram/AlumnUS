@@ -6,9 +6,12 @@ var fs			= require("fs");
 var config      = require('../config.json');
 var pipl        = require('pipl')(config.piplKey);
 var sleep       = require('sleep');
+var Bottleneck  = require("bottleneck");
+
+var MAX_RPS     = 2;
+var limiter     = new Bottleneck(MAX_RPS, 1000);
 
 // max number of API requests pipl can handle per second
-var MAX_REQUESTS = 2;
 
 function Pipl() { };
 
@@ -21,6 +24,38 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     console.log(start);
 
     async.each(currentJSON, function (person, cb) {
+        limiter.submit(Pipl.searchIndividual, person, params.nameattribute, function(error, result) {
+            if (error) {
+
+            }
+            else {
+                console.log("found a person");
+                console.log((new Date().getTime() - start)/1000);
+                if (!result.geography) {
+                    person.geography = "NOT FOUND";
+                }
+                else {
+                    person.geography = result.geography;
+                }
+                cb();
+            }
+        });
+    },
+    function(error) {
+        if (error) {
+            console.log(error);
+            console.log("callback error time");
+            console.log((new Date().getTime() - start)/1000);
+            callback(error, null);
+        }
+        else {
+            console.log("callback time");
+            console.log((new Date().getTime() - start)/1000);
+            callback(null, currentJSON);
+        }
+    }); 
+
+    /*async.each(currentJSON, function (person, cb) {
 
         Pipl.searchIndividual(person, params.nameattribute, function (err, result) {
             if (err) {
@@ -62,7 +97,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
             console.log((new Date().getTime() - start)/1000);
             callback(null, currentJSON);
         }
-    });
+    });*/
 
     /*async.each(result, function (person, callback) {
         var someObj = {userID: person.authorID};
@@ -176,6 +211,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     });*/
 };
 
+// take in params from form when uploaded to find attribute that contains name
 Pipl.searchIndividual = function(params, nameattribute, callback) {
 
     pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
