@@ -30,10 +30,20 @@ Pipl.searchJSONfile = function(filename, params, callback) {
                 cb(err);
             }
             else {
+                // throttle API requests with blocking sleep tool
                 sleep.usleep(1500000);
+
+                // log time if someone is found
                 console.log("found a person");
-                person.geography = "TESTING";
                 console.log((new Date().getTime() - start)/1000);
+
+                // update geography of user
+                if (!result.geography) {
+                    person.geography = null;
+                }
+                else {
+                    person.geography = result.geography;
+                }
                 cb();
             }
         });
@@ -176,7 +186,7 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
             console.log(err);
         }
         else {
-            //console.log("data: ");
+            //console.log("data: ")
             if (data.possible_persons && data.possible_persons[0]) {
                 var obj = data.possible_persons[0];
                 /*Object.keys(obj).forEach(function(key) {
@@ -190,6 +200,8 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
             }
             else {
                 console.log(data);
+
+                // should soon be changed to callback(data, null);
                 return callback(null, data);
             }
             //console.log(data.possible_persons[0]);

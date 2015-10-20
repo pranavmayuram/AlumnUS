@@ -2,6 +2,7 @@ var uuid        = require("uuid");
 var async       = require("async");
 var multer      = require("multer");
 var node_xj     = require("xls-to-json");
+var json2xls    = require("json2xls");
 var fs			= require("fs");
 
 function Excel() { };
@@ -54,7 +55,12 @@ Excel.upload = function(params, fileInfo, callback) {
     //}
 };
 
-//Excel.download = function(JSONfilename, )
+Excel.download = function(JSONresults, callback) {
+    var xls = json2xls(JSONresults);
+    var cachePath = "./uploads/download_" + uuid.v1() + ".xls";
+    fs.writeFileSync(cachePath, xls, 'binary');
+    return callback(null, cachePath);
+};
 
 
 

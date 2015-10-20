@@ -112,20 +112,29 @@ var appRouter = function(app) {
             Pipl.searchJSONfile(JSONfilename, req.body, function(err, JSONresults) {
                 if (err) {
                     console.log('ended on error');
-                    res.send(err);
+                    // res.send(err);
                 }
                 else {
                     console.log('ended on success');
-                    res.send('pipldone');
+                    // res.send('pipldone');
                 }
                 console.log("JSON OUTPUT: ");
                 console.log(JSONresults);
-                /*fs.unlink(JSONfilename, function (err) {
+                fs.unlink(JSONfilename, function (err) {
                     if (err) {
                         console.log(err);
                     }
                     console.log(JSONfilename + " deleted successfully");
-                });*/
+                    Excel.download(JSONresults, function (err, fileLocation) {
+                        res.download(fileLocation, "AlumnUS_"+req.file.originalname+".xls", function (err) {
+                            if (err) {
+                                console.log(err);
+                            }
+                            fs.unlinkSync(fileLocation);
+                            console.log("Excel file "+fileLocation+" successfully deleted");
+                        });
+                    });
+                });
             });
             // return res.send('woot');
         });
@@ -135,6 +144,7 @@ var appRouter = function(app) {
             console.log("getting to index.html"); // load the single view file (angular will handle the page changes on the front-end)
             res.sendfile('index.html');
     });
+
 };
 
 module.exports = appRouter;
