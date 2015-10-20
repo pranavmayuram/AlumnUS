@@ -15,12 +15,80 @@ function Pipl() { };
 Pipl.searchJSONfile = function(filename, params, callback) {
 
     var currentJSON = require("."+filename);
-    var requestArray = [];
+    // var requestArray = [];
+    console.log("start");
+    var start = new Date().getTime();
+    console.log(start);
+
+    async.each(currentJSON, function (person, cb) {
+
+        Pipl.searchIndividual(person, params.nameattribute, function (err, result) {
+            if (err) {
+                sleep.usleep(1500000);
+                console.log("err");
+                console.log((new Date().getTime() - start)/1000);
+                cb(err);
+            }
+            else {
+                sleep.usleep(1500000);
+                console.log("found a person");
+                person.geography = "TESTING";
+                console.log((new Date().getTime() - start)/1000);
+                cb();
+            }
+        });
+
+    },  
+
+    function(error) {
+        if (error) {
+            console.log(error);
+            console.log("callback time");
+            console.log((new Date().getTime() - start)/1000);
+            callback(error, null);
+        }
+        else {
+            console.log("callback time");
+            console.log((new Date().getTime() - start)/1000);
+            callback(null, currentJSON);
+        }
+    });
+
+    /*async.each(result, function (person, callback) {
+        var someObj = {userID: person.authorID};
+        User.advancedSearch(someObj, function (error, result) {
+            if (error) {
+                callback(error);
+            }
+            else {
+                console.log('PERSON INIT : ' + person);
+                console.log(result);
+                if (!result[0]) {
+                    console.log('user deleted, post ignored');
+                    callback();
+                }
+                else {
+                    console.log('result : ' + JSON.stringify(result[0]));
+                    person.author = result[0][primaryAttribute];
+                    console.log(person);
+                    callback();
+                }
+            }
+        });
+    }, function(err) {
+        if (err) {
+            console.log(error);
+        }
+        else {
+            console.log('final result: ' + JSON.stringify(result));
+            res.json(result);
+        }
+    });*/
 
     // we want to be able to loop through 'currentJSON', and make it into multiple arrays
     // then move through each array separately - loop within a loop
 
-    console.log('lengthJSON: '+ Math.ceil(currentJSON.length/MAX_REQUESTS));
+    /*console.log('lengthJSON: '+ Math.ceil(currentJSON.length/MAX_REQUESTS));
 
     var currentIndex = 0;
     for (i=0; i<Math.ceil(currentJSON.length/MAX_REQUESTS); ++i) {
@@ -34,45 +102,48 @@ Pipl.searchJSONfile = function(filename, params, callback) {
         currentIndex += MAX_REQUESTS;
     }
 
+    console.log('requestArray');
     console.log(requestArray);
 
-
-    async.each(requestArray, function (smallArray, callb) {
-        console.log('innerArray: ');
-        console.log(smallArray);
+    async.forEachOf(requestArray, function (smallArray, arrayIterator, callb) {
 
         // wait 1 second to throttle API requests
-        sleep.sleep(1);
+        sleep.sleep(2);
 
-        async.each(smallArray, function (person, cb) {
+        //requestArray.forEach(  ,smallArray);
 
-            console.log('smallArray: ');
-            console.log(smallArray);
-            
+        async.forEachOf(smallArray, function (person, innerIterator, cb) {
+
             Pipl.searchIndividual(person, params.nameattribute, function (error, result) {
                 if (error) {
-                    cb(error);
+                    cb(error, null);
                 }
                 else {
-                    person.geography = result;
-                    console.log(person);
-                    cb();
+                    //console.log('person: ');
+                    //console.log(result.names);
+                    console.log("currentIter: "+ (arrayIterator*MAX_REQUESTS + innerIterator));
+                    cb(null, arrayIterator*MAX_REQUESTS + innerIterator);
                 }
             });
 
-        }, function(error) {
+        }, function(error, index) {
             if (error) {
-                console.log(error);
+                // console.log(error);
+                callb(error);
             }
-            callb();
+            else if (index == (currentJSON.length - 1)) {
+                callb();
+            }
         });
 
     }, function(err) {
+        // console.log('finished');
         if (err) {
-            console.log(err);
+            // console.log(err);
+            callback(err, null);
         }
         else {
-            return callback(null, currentJSON);
+            callback(null, currentJSON);
         }
     });
     /*node_xj({
@@ -105,20 +176,21 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
             console.log(err);
         }
         else {
-            console.log("data: ");
+            //console.log("data: ");
             if (data.possible_persons && data.possible_persons[0]) {
                 var obj = data.possible_persons[0];
-                Object.keys(obj).forEach(function(key) {
+                /*Object.keys(obj).forEach(function(key) {
                     console.log(params[nameattribute]);
-                    /*if (key != '@search_pointer') {
+                    if (key != '@search_pointer') {
                         console.log(key, obj[key]);
-                    }*/
+                    }
                     // having some issues, keeps hitting the same name
-                });
+                }); */
                 return callback(null, data.possible_persons[0]);
             }
             else {
                 console.log(data);
+                return callback(null, data);
             }
             //console.log(data.possible_persons[0]);
         }

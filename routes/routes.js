@@ -111,10 +111,21 @@ var appRouter = function(app) {
 
             Pipl.searchJSONfile(JSONfilename, req.body, function(err, JSONresults) {
                 if (err) {
-                    console.log(err);
-                    return res.send(err);
+                    console.log('ended on error');
+                    res.send(err);
                 }
-                return res.send('pipldone');
+                else {
+                    console.log('ended on success');
+                    res.send('pipldone');
+                }
+                console.log("JSON OUTPUT: ");
+                console.log(JSONresults);
+                /*fs.unlink(JSONfilename, function (err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log(JSONfilename + " deleted successfully");
+                });*/
             });
             // return res.send('woot');
         });
