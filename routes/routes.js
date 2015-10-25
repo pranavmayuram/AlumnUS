@@ -56,15 +56,24 @@ var appRouter = function(app) {
     });
 
     app.get("/api/piplTry", function(req, res) {
-        pipl.search.query({"raw_name": "Pranav Mayuram",}, function(err, data) {
+        pipl.search.query({"raw_name": "Rawan Abdel Khalek"}, function(err, data) {
             // Here you go 
             if (err) {
                 console.log("error: ");
                 console.log(err);
             }
             else {
-                console.log("data: ");
-                if (data.possible_persons && data.possible_persons[0]) {
+                console.log(data);
+                console.log("-------------------------------------------------------------");
+                if (data.person) {
+                    var obj = data.person;
+                    Object.keys(obj).forEach(function(key) {
+                        if (key != '@search_pointer') {
+                            console.log(key, obj[key]);
+                        }
+                    });
+                }
+                else if (data.possible_persons && data.possible_persons[0]) {
                     var obj = data.possible_persons[0];
                     Object.keys(obj).forEach(function(key) {
                         if (key != '@search_pointer') {
@@ -80,21 +89,6 @@ var appRouter = function(app) {
         });
     });
 
-    /*app.get("/api/excel2json", function(req, res) {
-        node_xj({
-            input: "ExcelSampleRetry.xls",  // input xls 
-            output: null, // output json 
-            sheet: "Sheet1",  // specific sheetname 
-        }, function(err, result) {
-            if(err) {
-              console.error(err);
-            } else {
-              console.log(result);
-              res.json(result);
-            }
-        });
-
-    });*/
 
     app.post("/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
         console.log("endpoint hit");
