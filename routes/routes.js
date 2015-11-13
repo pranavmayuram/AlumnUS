@@ -56,7 +56,7 @@ var appRouter = function(app) {
     });
 
     app.get("/api/piplTry", function(req, res) {
-        pipl.search.query({"raw_name": "Rawan Abdel Khalek"}, function(err, data) {
+        pipl.search.query({"raw_name": "Othman Abdullah", "gender": "male", "age": 52}, function(err, data) {
             // Here you go 
             if (err) {
                 console.log("error: ");

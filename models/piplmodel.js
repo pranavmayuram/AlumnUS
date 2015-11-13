@@ -1,4 +1,4 @@
-var uuid        = require("uuid");
+ var uuid        = require("uuid");
 var async       = require("async");
 var multer      = require("multer");
 var node_xj     = require("xls-to-json");
@@ -22,6 +22,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     console.log("start");
     var start = new Date().getTime();
     console.log(start);
+    console.log("currentJSONlength : " + currentJSON.length);
 
     async.each(currentJSON, function (person, cb) {
         limiter.submit(Pipl.searchIndividual, person, params.nameattribute, function(error, result) {
@@ -31,11 +32,14 @@ Pipl.searchJSONfile = function(filename, params, callback) {
             else {
                 // console.log("found a person");
                 console.log((new Date().getTime() - start)/1000);
-                if (!result.geography) {
-                    person.geography = "NOT FOUND";
+                if (result.address) {
+                    person.address = result.address.display;
+                }
+                else if (result.addresses) {
+                    person.address = result.addresses[0].display;
                 }
                 else {
-                    person.geography = result.geography;
+                    person.address = "NOT FOUND";
                 }
                 cb();
             }
@@ -58,11 +62,10 @@ Pipl.searchJSONfile = function(filename, params, callback) {
 };
 
 // take in params from form when uploaded to find attribute that contains name
-Pipl.searchIndividual = function(params, nameattribute, callback) {
+Pipl.metadata = function(params, nameattribute, callback) {
 
     pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
 
-        // Here you go 
         if (err) {
             console.log("error: ");
             console.log(err);
@@ -96,7 +99,7 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
                 // check gender
                 if (obj.gender && obj.gender.content) {
                     ++genderExists;
-                    if (obj.gender.content == params.gender) {
+                    if (obj.gender.content == params.Gender) {
                         ++genderTrue;
                     }
                     else {
@@ -215,6 +218,30 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
             //console.log(data.possible_persons[0]); */
         }
     });
+};
+
+Pipl.searchIndividual = function(params, nameattribute, callback) {
+    
+    pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
+
+        if (err) {
+            console.log("error: ");
+            console.log(err);
+            return callback(err, null);
+        }
+        else {
+            if (data.person) {
+                return callback(null, data.person);
+            }
+            else if (data.possible_persons) {
+                return callback(null, data.possible_persons[0]);
+            }
+            else {
+                return callback("no one found", null);
+            }
+        }
+    });
+    // look through addresses (how to decide which is newest)
 };
 
 
