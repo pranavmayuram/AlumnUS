@@ -10,7 +10,7 @@ var node_xj     = require("xls-to-json");
 var Excel       = require("../models/excelmodel");
 var Pipl        = require("../models/piplmodel");
 
-var upload      = multer({dest: './uploads/', 
+var upload      = multer({dest: './uploads/',
     onFileUploadStart: function (file) {
       console.log(file.originalname + ' is starting ...')
     },
@@ -26,11 +26,11 @@ var upload      = multer({dest: './uploads/',
 });
 
 
-var options = {
-    timeout:  3000
-  , pool:     { maxSockets:  Infinity }
-  , headers:  { connection:  "keep-alive" }
-};
+// var options = {
+//     timeout:  3000
+//   , pool:     { maxSockets:  Infinity }
+//   , headers:  { connection:  "keep-alive" }
+// };
 
 
 var appRouter = function(app) {
@@ -56,16 +56,17 @@ var appRouter = function(app) {
     });
 
     app.get("/api/piplTry", function(req, res) {
-        pipl.search.query({"raw_name": "Othman Abdullah", "gender": "male", "age": 52}, function(err, data) {
-            // Here you go 
+        pipl.search.query({raw_name: "Othman Abdullah", gender: "male", age: 42}, function(err, data) {
+        // Pipl.personObjQuery({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]}, function(err, data) {
             if (err) {
                 console.log("error: ");
                 console.log(err);
             }
             else {
-                console.log(data);
+                // console.log(data);
                 console.log("-------------------------------------------------------------");
                 if (data.person) {
+                    console.log("-------------------------------person-------------------------");
                     var obj = data.person;
                     Object.keys(obj).forEach(function(key) {
                         if (key != '@search_pointer') {
@@ -74,14 +75,19 @@ var appRouter = function(app) {
                     });
                 }
                 else if (data.possible_persons && data.possible_persons[0]) {
-                    var obj = data.possible_persons[0];
-                    Object.keys(obj).forEach(function(key) {
-                        if (key != '@search_pointer') {
-                            console.log(key, obj[key]);
-                        }
-                    });
+                    console.log("-----------------------possible_persons-------------------------");
+                    for (i=0; i < data.possible_persons.length; ++i) {
+                        console.log("---------------------------------person "+i+"--------------------------");
+                        var obj = data.possible_persons[i];
+                        Object.keys(obj).forEach(function(key) {
+                            if (key != '@search_pointer') {
+                                console.log(key, obj[key]);
+                            }
+                        });
+                    }
                 }
                 else {
+                    console.log("--------------------------neither----------------------------");
                     console.log(data);
                 }
                 //console.log(data.possible_persons[0]);

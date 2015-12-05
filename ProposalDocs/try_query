@@ -1,0 +1,1 @@
+curl http://api.pipl.com/search/v4/ \-d person='{"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]}' \-d key=sample_key

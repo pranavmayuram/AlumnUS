@@ -1,4 +1,4 @@
- var uuid        = require("uuid");
+var uuid        = require("uuid");
 var async       = require("async");
 var multer      = require("multer");
 var node_xj     = require("xls-to-json");
@@ -7,13 +7,30 @@ var config      = require('../config.json');
 var pipl        = require('pipl')(config.piplKey);
 var sleep       = require('sleep');
 var Bottleneck  = require("bottleneck");
+var request     = require("request");
+var curlify     = require("curlify");
 
-var MAX_RPS     = 2;
+var MAX_RPS     = 5;
 var limiter     = new Bottleneck(MAX_RPS, 1000);
 
 // max number of API requests pipl can handle per second
 
 function Pipl() { };
+
+Pipl.personObjQuery = function(someObj, callback) {
+    var curlstring = "curl http://api.pipl.com/search/v4/ \\-d person=\'" + JSON.stringify(someObj) + "\' \\-d key=" + config.piplKey;
+    var reqstring = curlify(curlstring);
+    request(reqstring, function (error, response, body) {
+        if (error) {
+            return callback(error, null);
+        }
+        else {
+            console.log(body);
+            // console.log(response);
+            return callback(null, body);
+        }
+    });
+};
 
 Pipl.searchJSONfile = function(filename, params, callback) {
 
@@ -25,7 +42,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     console.log("currentJSONlength : " + currentJSON.length);
 
     async.each(currentJSON, function (person, cb) {
-        limiter.submit(Pipl.searchIndividual, person, params.nameattribute, function(error, result) {
+        limiter.submit(Pipl.filter, person, params.nameattribute, function(error, result) {
             if (error) {
                 console.log(error);
             }
@@ -57,7 +74,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
             console.log((new Date().getTime() - start)/1000);
             callback(null, currentJSON);
         }
-    }); 
+    });
 
 };
 
@@ -138,8 +155,8 @@ Pipl.metadata = function(params, nameattribute, callback) {
                 console.log(params[nameattribute] + " : "+lengthdataobj+" possible_persons");
                 console.log("------------------------------------------");
                 for (i=0; i < lengthdataobj; ++i) {
-                    var obj = data.possible_persons[i];   
-                    
+                    var obj = data.possible_persons[i];
+
                     // check date of birth
                     if (obj.dob && obj.dob.display) {
                         ++ageExists;
@@ -206,7 +223,7 @@ Pipl.metadata = function(params, nameattribute, callback) {
                         console.log(key, obj[key]);
                     }
                     // having some issues, keeps hitting the same name
-                }); 
+                });
                 return callback(null, data.possible_persons[0]);
             }
             else {
@@ -221,7 +238,7 @@ Pipl.metadata = function(params, nameattribute, callback) {
 };
 
 Pipl.searchIndividual = function(params, nameattribute, callback) {
-    
+
     pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
 
         if (err) {
@@ -244,6 +261,150 @@ Pipl.searchIndividual = function(params, nameattribute, callback) {
     // look through addresses (how to decide which is newest)
 };
 
+Pipl.filter = function(params, nameattribute, callback) {
+
+    pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
+
+        if (err) {
+            console.log("error: ");
+            console.log(err);
+            return callback(err, null);
+        }
+        else {
+            console.log("-----------------------------"+params[nameattribute]+"-----------------");
+            if (data.person) {
+                console.log("PERSON");
+                logObjectResults(data.person);
+                return callback(null, data.person);
+            }
+            else if (data.possible_persons.length < 49) {
+                console.log("ONE RUN " + data.possible_persons.length + " results");
+                logArrayResults(data.possible_persons);
+                Pipl.internalCheck(data, params, nameattribute, function (correctIndividual) {
+                    return callback(null, correctIndividual);
+                });
+            }
+            else if (data.possible_persons.length >= 49) {
+                pipl.search.query({"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}, function(errFiltered, dataFiltered) {
+                    if (errFiltered) {
+                        console.log("errFiltered: ");
+                        console.log(errFiltered);
+                        return callback(errFiltered, null);
+                    }
+                    else {
+                        console.log("TWO RUNS");
+                        if (dataFiltered.person) {
+                            console.log("PERSON");
+                            logObjectResults(dataFiltered.person);
+                            return callback(null, dataFiltered.person);
+                        }
+                        else {
+                            console.log(dataFiltered.possible_persons.length + " RESULTS");
+                            logArrayResults(dataFiltered.possible_persons);
+                            Pipl.internalCheck(dataFiltered, params, nameattribute, function (correctIndividual) {
+                                return callback(null, correctIndividual);
+                            });
+                        }
+                    }
+                });
+            }
+            else {
+                return callback("no one found", null);
+            }
+        }
+    });
+    // look through addresses (how to decide which is newest)
+};
+
+Pipl.internalCheck = function(data, params, nameattribute, callback) {
+
+    // set values for each attribute
+    var ageTrue = 2;
+    var genderTrue = 2;
+    var annArborAddress = 4;
+    var universityTrue = 5;
+    var scoreArray = [];
+
+    // loop through all possible_persons and add score to array
+    for (i=0; i < data.possible_persons.length; ++i) {
+        var score = 0;
+        var obj = data.possible_persons[i];
+
+        // check date of birth
+        if (obj.dob && obj.dob.display) {
+            for (j = params.Age - 2; j <= params.Age + 2; ++j) {
+                if (obj.dob.display.substr(0, obj.dob.display.indexOf(' ')) == j) {
+                    score += ageTrue;
+                }
+            }
+        }
+
+        // check gender
+        if (obj.gender && obj.gender.content) {
+            if (obj.gender.content.toLowerCase() == params.Gender.toLowerCase()) {
+                score += genderTrue;
+            }
+        }
+
+        // check university -- issues with university false
+        if (obj.educations) {
+            for (j=0; j < obj.educations.length; ++j) {
+                if (obj.educations[j].school == "University of Michigan") {
+                    score += universityTrue;
+                    break;
+                }
+            }
+        }
+
+        // check if they ever lived in Ann Arbor
+        if (obj.addresses) {
+            for (n=0; n< obj.addresses.length; ++n) {
+                if (obj.addresses[n].city == "Ann Arbor") {
+                    score += annArborAddress;
+                    break;
+                }
+            }
+        }
+
+        // add total score to scoreArray
+        scoreArray[i] = score;
+    }
+
+    // loop through score array to find highest score
+    var highIndex = 0;
+    for (z=0; z < scoreArray.length; ++z) {
+        if (scoreArray[z] > scoreArray[highIndex]) {
+            highIndex = z;
+        }
+    }
+    console.log(params[nameattribute] + " had highest score of " + scoreArray[highIndex]);
+    return callback(data.possible_persons[highIndex]);
+}
+
+var logArrayResults = function(arrayObjects) {
+    for (i=0; i < arrayObjects.length; ++i) {
+        var obj = arrayObjects[i];
+        console.log("-------------------result "+i+"------------------");
+        Object.keys(obj).forEach(function(key) {
+            // console.log(params[nameattribute]);
+            if (key != '@search_pointer') {
+                console.log(key, obj[key]);
+            }
+            // having some issues, keeps hitting the same name
+        });
+    }
+}
+
+var logObjectResults = function(someObj) {
+    var obj = someObj;
+    Object.keys(obj).forEach(function(key) {
+        // console.log(params[nameattribute]);
+        if (key != '@search_pointer') {
+            console.log(key, obj[key]);
+        }
+        // having some issues, keeps hitting the same name
+    });
+}
 
 
 module.exports = Pipl;
