@@ -334,10 +334,17 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
         if (obj.dob && obj.dob.display) {
             for (j = params.Age - 2; j <= params.Age + 2; ++j) {
                 if (obj.dob.display.substr(0, obj.dob.display.indexOf(' ')) == j) {
-                    score += ageTrue;
+                    if (j >= params.Age) {
+                        score += ageTrue;
+                    }
+                    else {
+                        score += ageTrue/2;
+                    }
                 }
+                // increase if we know correct, decrease if false
             }
         }
+        // don't add or diminish if no field for age
 
         // check gender
         if (obj.gender && obj.gender.content) {
@@ -358,10 +365,32 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
 
         // check if they ever lived in Ann Arbor
         if (obj.addresses) {
+            var found = false;
             for (n=0; n< obj.addresses.length; ++n) {
                 if (obj.addresses[n].city == "Ann Arbor") {
                     score += annArborAddress;
+                    found = true;
                     break;
+                }
+            }
+            // if address in AA already found, then ignore this loop
+            if (!found) {
+                for (n=0; n< obj.addresses.length; ++n) {
+                    if (obj.addresses[n].city == "Ypsilanti") {
+                        score += annArborAddress/2;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            // if address in AA or Ypsi already found, then ignore this loop
+            if (!found) {
+                for (n=0; n< obj.addresses.length; ++n) {
+                    if (obj.addresses[n].state == "MI") {
+                        score += annArborAddress/4;
+                        found = true;
+                        break;
+                    }
                 }
             }
         }
@@ -377,6 +406,7 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
             highIndex = z;
         }
     }
+    console.log(scoreArray);
     console.log(params[nameattribute] + " had highest score of " + scoreArray[highIndex]);
     return callback(data.possible_persons[highIndex]);
 }

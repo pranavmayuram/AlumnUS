@@ -95,6 +95,62 @@ var appRouter = function(app) {
         });
     });
 
+    app.get("/api/curlRecreate", function(req, res) {
+        // recreate CURL COMMAND
+        request({
+            method: 'POST',
+            uri: 'http://api.pipl.com/search/v4/',
+            multipart: {
+                chunked: false,
+                data: [
+                    {
+                        'content-type': 'application/json',
+                        body: ("person=" + JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]})),
+                    },
+                    { body: ('key=' + config.piplKey) }
+                ]
+            }
+        },
+        function (error, response, body) {
+            if (error) {
+                console.log("error: ");
+                console.log(error);
+            }
+            else {
+                console.log("BODY:");
+                console.log(body);
+                // // console.log(data);
+                // console.log("-------------------------------------------------------------");
+                // if (data.person) {
+                //     console.log("-------------------------------person-------------------------");
+                //     var obj = data.person;
+                //     Object.keys(obj).forEach(function(key) {
+                //         if (key != '@search_pointer') {
+                //             console.log(key, obj[key]);
+                //         }
+                //     });
+                // }
+                // else if (data.possible_persons && data.possible_persons[0]) {
+                //     console.log("-----------------------possible_persons-------------------------");
+                //     for (i=0; i < data.possible_persons.length; ++i) {
+                //         console.log("---------------------------------person "+i+"--------------------------");
+                //         var obj = data.possible_persons[i];
+                //         Object.keys(obj).forEach(function(key) {
+                //             if (key != '@search_pointer') {
+                //                 console.log(key, obj[key]);
+                //             }
+                //         });
+                //     }
+                // }
+                // else {
+                //     console.log("--------------------------neither----------------------------");
+                //     console.log(data);
+                // }
+                //console.log(data.possible_persons[0]);
+            }
+        });
+    });
+
 
     app.post("/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
         console.log("endpoint hit");
