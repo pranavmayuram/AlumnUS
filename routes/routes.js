@@ -1,7 +1,6 @@
 var uuid        = require("uuid");
 var async       = require("async");
 var multer      = require("multer");
-var graph 		= require('fbgraph');
 var request     = require('request');
 var config      = require('../config.json');
 var pipl        = require('pipl')(config.piplKey);
@@ -34,26 +33,6 @@ var upload      = multer({dest: './uploads/',
 
 
 var appRouter = function(app) {
-
-	app.get("/api/fbData", function(req, res) {
-        request("https://graph.facebook.com/oauth/access_token?client_id="+config.fbAuth.client_id+"&client_secret="+config.fbAuth.client_secret+"&grant_type=client_credentials", function (error, response, result) {
-            if (error) {
-                return res.status(400).send(error);
-            }
-            else if (!error && response.statusCode == 200) {
-                // receives the access token for the API to then access it
-                console.log('result');
-                console.log(result);
-                result = result.replace('access_token=', '');
-                console.log(result);
-                graph.setAccessToken(result);
-                graph.get("zuck", function(err, resp) {
-                    console.log(resp);
-                    res.send(resp); // { id: '4', name: 'Mark Zuckerberg'... }
-                });
-            }
-        });
-    });
 
     app.get("/api/piplTry", function(req, res) {
         pipl.search.query({raw_name: "Othman Abdullah", gender: "male", age: 42}, function(err, data) {
@@ -97,18 +76,35 @@ var appRouter = function(app) {
 
     app.get("/api/curlRecreate", function(req, res) {
         // recreate CURL COMMAND
-        request({
-            method: 'POST',
-            uri: 'http://api.pipl.com/search/v4/',
-            multipart: {
-                chunked: false,
-                data: [
-                    {
-                        'content-type': 'application/json',
-                        body: ("person=" + JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]})),
-                    },
-                    { body: ('key=' + config.piplKey) }
-                ]
+        var formed_JSON = JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]});
+
+        // console.log('http://api.pipl.com/search/v4/' + '\ -d' + formed_JSON + '\ -d' + 'key=' + config.piplKey);
+
+        // console.log(('http://api.pipl.com/search/v4/' + 'person=' + formed_JSON +'&key=' + config.piplKey));
+
+        // request({
+        //     method: 'POST',
+        //     uri: 'http://api.pipl.com/search/v4/',
+        //     multipart: {
+        //         chunked: false,
+        //         data: [
+        //             {
+        //                 'content-type': 'application/x-www-form-urlencoded',
+        //                 body: ("person=" + JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]}))
+        //             },
+        //             {
+        //                 'content-type': 'application/x-www-form-urlencoded',
+        //                 body: ('key=' + config.piplKey)
+        //             }
+        //         ]
+        //     }
+        // },
+
+        // request.post(('http://api.pipl.com/search/v4/' + 'person=' + formed_JSON +'&key=' + config.piplKey),
+        request.post('http://api.pipl.com/search/v4/', {
+            form: {
+                person: formed_JSON,
+                key: config.piplKey
             }
         },
         function (error, response, body) {

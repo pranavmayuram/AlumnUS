@@ -1,5 +1,4 @@
 var uuid        = require("uuid");
-var async       = require("async");
 var multer      = require("multer");
 var node_xj     = require("xls-to-json");
 var json2xls    = require("json2xls");
@@ -8,7 +7,7 @@ var fs			= require("fs");
 function Excel() { };
 
 Excel.upload = function(params, fileInfo, callback) {
-    
+
     if (!fileInfo) {
         return callback(null, 'blah');
     }
@@ -25,16 +24,16 @@ Excel.upload = function(params, fileInfo, callback) {
         }
         else {
         	var jsonpath = "./JSON/alumnus_" + uuid.v1() + ".json";
-        	
+
             var node_excel = node_xj({
-	            input: fileInfo.path,  // input xls 
+	            input: fileInfo.path,  // input xls
 	            output: jsonpath, // output json 			// can this be exported to a variable? (can also do from a file if need be)
-	            sheet: params.sheetname  // specific sheetname 
+	            sheet: params.sheetname  // specific sheetname
 	        }, function(err, result) {
 	            if(err) {
 	            	console.error(err);
 	            	return callback(err, null);
-	            } 
+	            }
 	            else {
                     fs.unlink(fileInfo.path, function (error) {
                         if (error) {

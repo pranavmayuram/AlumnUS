@@ -1,11 +1,7 @@
-var uuid        = require("uuid");
 var async       = require("async");
-var multer      = require("multer");
-var node_xj     = require("xls-to-json");
 var fs			= require("fs");
 var config      = require('../config.json');
 var pipl        = require('pipl')(config.piplKey);
-var sleep       = require('sleep');
 var Bottleneck  = require("bottleneck");
 var request     = require("request");
 var curlify     = require("curlify");
@@ -18,8 +14,11 @@ var limiter     = new Bottleneck(MAX_RPS, 1000);
 function Pipl() { };
 
 Pipl.personObjQuery = function(someObj, callback) {
-    var curlstring = "curl http://api.pipl.com/search/v4/ \\-d person=\'" + JSON.stringify(someObj) + "\' \\-d key=" + config.piplKey;
+    var JSON_input = JSON.stringify(someObj);
+    var curlstring = "curl http://api.pipl.com/search/v4/ \\-d person=\'" + JSON_input + "\' \\-d key=" + config.piplKey;
+    console.log(curlstring);
     var reqstring = curlify(curlstring);
+    console.log(reqstring);
     request(reqstring, function (error, response, body) {
         if (error) {
             return callback(error, null);
