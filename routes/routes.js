@@ -44,6 +44,7 @@ var appRouter = function(app) {
             else {
                 // console.log(data);
                 console.log("-------------------------------------------------------------");
+                console.log(data);
                 if (data.person) {
                     console.log("-------------------------------person-------------------------");
                     var obj = data.person;
@@ -78,29 +79,6 @@ var appRouter = function(app) {
         // recreate CURL COMMAND
         var formed_JSON = JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]});
 
-        // console.log('http://api.pipl.com/search/v4/' + '\ -d' + formed_JSON + '\ -d' + 'key=' + config.piplKey);
-
-        // console.log(('http://api.pipl.com/search/v4/' + 'person=' + formed_JSON +'&key=' + config.piplKey));
-
-        // request({
-        //     method: 'POST',
-        //     uri: 'http://api.pipl.com/search/v4/',
-        //     multipart: {
-        //         chunked: false,
-        //         data: [
-        //             {
-        //                 'content-type': 'application/x-www-form-urlencoded',
-        //                 body: ("person=" + JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]}))
-        //             },
-        //             {
-        //                 'content-type': 'application/x-www-form-urlencoded',
-        //                 body: ('key=' + config.piplKey)
-        //             }
-        //         ]
-        //     }
-        // },
-
-        // request.post(('http://api.pipl.com/search/v4/' + 'person=' + formed_JSON +'&key=' + config.piplKey),
         request.post('http://api.pipl.com/search/v4/', {
             form: {
                 person: formed_JSON,
@@ -115,34 +93,6 @@ var appRouter = function(app) {
             else {
                 console.log("BODY:");
                 console.log(body);
-                // // console.log(data);
-                // console.log("-------------------------------------------------------------");
-                // if (data.person) {
-                //     console.log("-------------------------------person-------------------------");
-                //     var obj = data.person;
-                //     Object.keys(obj).forEach(function(key) {
-                //         if (key != '@search_pointer') {
-                //             console.log(key, obj[key]);
-                //         }
-                //     });
-                // }
-                // else if (data.possible_persons && data.possible_persons[0]) {
-                //     console.log("-----------------------possible_persons-------------------------");
-                //     for (i=0; i < data.possible_persons.length; ++i) {
-                //         console.log("---------------------------------person "+i+"--------------------------");
-                //         var obj = data.possible_persons[i];
-                //         Object.keys(obj).forEach(function(key) {
-                //             if (key != '@search_pointer') {
-                //                 console.log(key, obj[key]);
-                //             }
-                //         });
-                //     }
-                // }
-                // else {
-                //     console.log("--------------------------neither----------------------------");
-                //     console.log(data);
-                // }
-                //console.log(data.possible_persons[0]);
             }
         });
     });

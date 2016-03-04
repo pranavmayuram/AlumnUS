@@ -3,10 +3,5 @@
         "server": "127.0.0.1:8091",
         "AlumnUSPort": 4300
     },
-    "fbAuth": {
-    	"client_id": "",
-    	"client_secret": ""
-
-    },
     "piplKey": ""
 }
