@@ -1,0 +1,7 @@
+{
+    "setup": {
+        "server": "127.0.0.1:8091",
+        "AlumnUSPort": 4300
+    },
+    "piplKey": "<YOUR KEY HERE>"
+}
