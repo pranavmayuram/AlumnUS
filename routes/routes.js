@@ -8,6 +8,7 @@ var fs          = require('fs');
 var node_xj     = require("xls-to-json");
 var Excel       = require("../models/excelmodel");
 var Pipl        = require("../models/piplmodel");
+var moment      = require("moment");
 
 var upload      = multer({dest: './uploads/',
     onFileUploadStart: function (file) {
@@ -35,7 +36,8 @@ var upload      = multer({dest: './uploads/',
 var appRouter = function(app) {
 
     app.get("/api/piplTry", function(req, res) {
-        pipl.search.query({raw_name: "Othman Abdullah", gender: "male", age: 42}, function(err, data) {
+        var start = new Date();
+        pipl.search.query({raw_name: "Raj Patel", gender: "male", age: 19}, function(err, data) {
         // Pipl.personObjQuery({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]}, function(err, data) {
             if (err) {
                 console.log("error: ");
@@ -72,16 +74,32 @@ var appRouter = function(app) {
                 }
                 //console.log(data.possible_persons[0]);
             }
+            var end = new Date();
+            console.log("time = " + (end - start));
         });
     });
 
     app.get("/api/curlRecreate", function(req, res) {
         // recreate CURL COMMAND
-        var formed_JSON = JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]});
+        // var formed_JSON = JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]});
 
-        request.post('http://api.pipl.com/search/v4/', {
+        var date_start = (moment().year() - 20 - 3) + "-01-01";
+        var date_end = (moment().year() - 20 + 2) + "-12-31";
+
+        var formed_JSON = {
+            educations : [{"school":"University of Michigan"}],
+            gender : {"content": "Male"},
+            names : [{"raw": "Pranav Mayuram"}],
+            dob : {
+                "date_range": {
+                    "start":date_start,
+                    "end":date_end
+                }
+            }
+        };
+        request.post('http://api.pipl.com/search/v5/', {
             form: {
-                person: formed_JSON,
+                person: JSON.stringify(formed_JSON),
                 key: config.piplKey
             }
         },

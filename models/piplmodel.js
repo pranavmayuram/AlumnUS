@@ -6,8 +6,9 @@ var Bottleneck  = require("bottleneck");
 var request     = require("request");
 var moment      = require("moment");
 
-var MAX_RPS     = 5;
+var MAX_RPS     = 1;
 var limiter     = new Bottleneck(MAX_RPS, 1000);
+var result_arr  = [];
 
 // max number of API requests pipl can handle per second
 
@@ -32,7 +33,7 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
     };
 
     // {"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}
-    request.post('http://api.pipl.com/search/v4/', {
+    request.post({'url': 'http://api.pipl.com/search/v4/', 'timeout': 12000} , {
         form: {
             person: JSON.stringify(formed_JSON),
             key: config.piplKey
@@ -66,36 +67,71 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     var start = new Date().getTime();
     console.log(start);
     console.log("currentJSONlength : " + currentJSON.length);
+    result_arr = [];
 
     async.each(currentJSON, function (person, cb) {
         console.log(person[params.nameattribute] + " was submitted to limiter");
-        limiter.submit(Pipl.filter, person, params.nameattribute, function(error, result) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                // console.log("found a person");
-                console.log((new Date().getTime() - start)/1000);
-                if (result) {
-                    if (result.address) {
-                        console.log(params.nameattribute + " lives at: " + result.address.display);
-                        person.address = result.address.display;
-                    }
-                    else if (result.addresses) {
-                        console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
-                        person.address = result.addresses[0].display;
-                    }
-                    else {
-                        person.address = "NOT FOUND";
-                    }
+        // limiter.submit(Pipl.filter, person, params.nameattribute, function(error, result) {
+        //     if (error) {
+        //         console.log(error);
+        //     }
+        //     else {
+        //         // console.log("found a person");
+        //         console.log((new Date().getTime() - start)/1000);
+        //         if (result) {
+        //             if (result.address) {
+        //                 console.log(params.nameattribute + " lives at: " + result.address.display);
+        //                 person.address = result.address.display;
+        //             }
+        //             else if (result.addresses) {
+        //                 console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
+        //                 person.address = result.addresses[0].display;
+        //             }
+        //             else {
+        //                 person.address = "NOT FOUND";
+        //             }
+        //         }
+        //         else {
+        //             // handles cases of no results found
+        //             person.address = "NOT FOUND";
+        //         }
+        //         cb();
+        //     }
+        // });
+
+
+        limiter.submit(function(get_out) {
+            Pipl.filter (person, params.nameattribute, function(error, result) {
+                if (error) {
+                    console.log(error);
+                    get_out();
                 }
                 else {
-                    // handles cases of no results found
-                    person.address = "NOT FOUND";
+                    // console.log("found a person");
+                    console.log((new Date().getTime() - start)/1000);
+                    if (result) {
+                        if (result.address) {
+                            console.log(params.nameattribute + " lives at: " + result.address.display);
+                            person.address = result.address.display;
+                        }
+                        else if (result.addresses) {
+                            console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
+                            person.address = result.addresses[0].display;
+                        }
+                        else {
+                            person.address = "NOT FOUND";
+                        }
+                    }
+                    else {
+                        // handles cases of no results found
+                        person.address = "NOT FOUND";
+                    }
+                    get_out();
+                    cb();
                 }
-                cb();
-            }
-        });
+            });
+        }, null);
+        // cb();
     },
     function(error) {
         if (error) {
@@ -294,6 +330,7 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
         }
     }
     console.log(scoreArray);
+    result_arr.push.apply(scoreArray);
     console.log(params[nameattribute] + " had highest score of " + scoreArray[highIndex]);
     return callback(data.possible_persons[highIndex]);
 }
