@@ -97,7 +97,7 @@ var appRouter = function(app) {
                 }
             }
         };
-        request.post('http://api.pipl.com/search/v5/', {
+        request.post('http://api.pipl.com/search/v4/', {
             form: {
                 person: JSON.stringify(formed_JSON),
                 key: config.piplKey
