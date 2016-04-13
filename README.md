@@ -25,10 +25,11 @@ There is a basic UI, which was pictured in the introduction, from which a user c
 A file is then downloaded to the user, along with two columns appended. These include an "address" field, and a "reliability" field. The "address" field stores the address of the individual that the AlumnUS API matches up to the individual on the given row. The "reliability" field stores a code that pertains how accurate the result is presumed to be. This is generated based on the ranking for that individual whose "address" is included. It essentially accounts for the situations where there are too many individuals to find an ideal result, when there is no result found, or when the result is simply weak and doesn't fulfill some of the parameters passed by the user. This allows for filtration when looking at the Excel sheet that is output to the user.
 
 ######Response codes:
-*  **"C"** -  Output when the result is considered correct
-* **"TM"** - Output when there are too many results to differentiate properly
-* **"NR"** - Output when there are no results for the given person
-* **"WK"** - Output when the result is weak, and doesn't pass many of the conditions given by the user
+* **"SR"** - Output when the result is considered very strong; many of the conditions were satisfied
+* **"MD"** - Output when the result is moderately strong; around half of the conditions were satisfied
+* **"WK"** - Output when the result is weak; doesn't pass many of the conditions given by the user
+* **"TM"** - Output when there are too many results to differentiate properly between them
+* **"NR"** - Output when there are no results from the Pipl API for the given person
 
 ####Tools used
 
