@@ -9,6 +9,8 @@ var moment      = require("moment");
 var MAX_RPS     = 1;
 var limiter     = new Bottleneck(MAX_RPS, 1000);
 var result_arr  = [];
+var high_scores = [];
+var high_objs   = [];
 
 // max number of API requests pipl can handle per second
 
@@ -68,6 +70,8 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     console.log(start);
     console.log("currentJSONlength : " + currentJSON.length);
     result_arr = [];
+    high_scores = [];
+    high_objs = [];
 
     async.each(currentJSON, function (person, cb) {
         console.log(person[params.nameattribute] + " was submitted to limiter");
@@ -101,34 +105,102 @@ Pipl.searchJSONfile = function(filename, params, callback) {
 
 
         limiter.submit(function(get_out) {
-            Pipl.filter (person, params.nameattribute, function(error, result) {
+            Pipl.filter (person, params.nameattribute, function(error) {
                 if (error) {
                     console.log(error);
-                    get_out();
+                    // get_out();
                 }
-                else {
-                    // console.log("found a person");
-                    console.log((new Date().getTime() - start)/1000);
-                    if (result) {
-                        if (result.address) {
-                            console.log(params.nameattribute + " lives at: " + result.address.display);
-                            person.address = result.address.display;
-                        }
-                        else if (result.addresses) {
-                            console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
-                            person.address = result.addresses[0].display;
-                        }
-                        else {
-                            person.address = "NOT FOUND";
-                        }
+
+                // determine address here!!
+                var highest_index = 0;
+                for (i=0; i < high_scores.length; ++i) {
+                    if (high_scores[i] > high_scores[highest_index]) {
+                        highest_index = i;
+                    }
+                }
+                result = high_objs[highest_index];
+                highScore = high_scores[highest_index];
+
+                var err_code = "";
+                console.log((new Date().getTime() - start)/1000);
+                if (result) {
+                    if (result.address) {
+                        console.log(params.nameattribute + " lives at: " + result.address.display);
+                        person.address = result.address.display;
+                    }
+                    else if (result.addresses) {
+                        console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
+                        person.address = result.addresses[0].display;
                     }
                     else {
-                        // handles cases of no results found
+                        err_code = "NR";
                         person.address = "NOT FOUND";
                     }
-                    get_out();
-                    cb();
                 }
+                else {
+                    // handles cases of no results found
+                    err_code = "NR";
+                    person.address = "NOT FOUND";
+                }
+
+
+                // determine strength of result here!!
+                var num_same = 0;
+                var num_close = 0;
+                for (i=0; i < result_arr.length; ++i) {
+                    if (result_arr[i] == highScore) {
+                        ++num_same;
+                    }
+                    else if ((highScore - result_arr[i]) >= highScore/4) {
+                        ++num_close;
+                    }
+                }
+
+                if (highScore >= 8) {
+                    err_code = "SR";
+                }
+                else if (highScore <= 4) {
+                    err_code = "WK";
+                }
+                else if (num_same >= 3 || num_close >= 6 || (num_same + num_close >= 6)) {
+                    err_code = "TM";
+                }
+                else {
+                    err_code = "MD";
+                }
+
+                person.errorCode = err_code;
+
+                result_arr = [];
+                high_scores = [];
+                high_objs = [];
+
+                get_out();
+                cb();
+
+                // else {
+                //     // console.log("found a person");
+                //     console.log((new Date().getTime() - start)/1000);
+                //     if (result) {
+                //         if (result.address) {
+                //             console.log(params.nameattribute + " lives at: " + result.address.display);
+                //             person.address = result.address.display;
+                //         }
+                //         else if (result.addresses) {
+                //             console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
+                //             person.address = result.addresses[0].display;
+                //         }
+                //         else {
+                //             person.address = "NOT FOUND";
+                //         }
+                //     }
+                //     else {
+                //         // handles cases of no results found
+                //         person.address = "NOT FOUND";
+                //     }
+                //     get_out();
+                //     cb();
+                // }
             });
         }, null);
         // cb();
@@ -156,7 +228,7 @@ Pipl.filter = function(params, nameattribute, callback) {
         if (err) {
             console.log("error: ");
             console.log(err);
-            return callback(err, null);
+            return callback(err);
         }
         else {
             console.log("-----------------------------"+params[nameattribute]+"-----------------");
@@ -164,7 +236,10 @@ Pipl.filter = function(params, nameattribute, callback) {
                 console.log("ONE RUN");
                 console.log("PERSON");
                 logObjectResults(data.person);
-                return callback(null, data.person);
+                var newArr = [data.person];
+                Pipl.internalCheck(newArr, params, nameattribute, function (correctIndividual) {
+                    return callback(null);
+                });
             }
             else if (data.possible_persons.length < 49) {
                 // if (data.possible_persons.length == 0) {
@@ -172,72 +247,122 @@ Pipl.filter = function(params, nameattribute, callback) {
                 // }
                 console.log("ONE RUN " + data.possible_persons.length + " results");
                 logArrayResults(data.possible_persons);
-                Pipl.internalCheck(data, params, nameattribute, function (correctIndividual) {
-                    return callback(null, correctIndividual);
+                Pipl.internalCheck(data.possible_persons, params, nameattribute, function (correctIndividual) {
+                    return callback(null);
                 });
             }
             else if (data.possible_persons.length >= 49) {
-                pipl.search.query({"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}, function (errFiltered, dataFiltered) {
-                    if (errFiltered) {
-                        console.log("errFiltered: ");
-                        console.log(errFiltered);
-                        return callback(errFiltered, null);
-                    }
-                    else {
-                        if (dataFiltered.person) {
+                Pipl.internalCheck(data.possible_persons, params, nameattribute, function (correctIndividual) {
+                    pipl.search.query({"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}, function (errFiltered, dataFiltered) {
+                        if (errFiltered) {
+                            console.log("errFiltered: ");
+                            console.log(errFiltered);
+                            return callback(errFiltered);
+                        }
+                        else if (dataFiltered.person) {
                             console.log("TWO RUNS");
                             console.log("PERSON");
                             logObjectResults(dataFiltered.person);
-                            return callback(null, dataFiltered.person);
-                        }
-                        else if (dataFiltered.possible_persons.length < 49) {
-                            console.log("TWO RUNS " + dataFiltered.possible_persons.length + " RESULTS");
-                            logArrayResults(dataFiltered.possible_persons);
-                            Pipl.internalCheck(dataFiltered, params, nameattribute, function (correctIndividual) {
-                                return callback(null, correctIndividual);
-                            });
-                        }
-                        else if (dataFiltered.possible_persons.length >= 49) {
-                            Pipl.personObjQuery(params, nameattribute, function (errPurified, dataPurified) {
-                                if (errPurified) {
-                                    console.log("errPurified: ");
-                                    console.log(errPurified);
-                                    return callback(errPurified, null);
-                                }
-                                else {
-                                    // console.log(dataPurified);
-                                    if (dataPurified.person) {
-                                        console.log("THREE RUNS");
-                                        console.log("PERSON");
-                                        logObjectResults(dataPurified.person);
-                                        return callback(null, dataPurified.person);
-                                    }
-                                    else if (dataPurified.possible_persons) {
-                                        console.log("THREE RUNS " + dataPurified.possible_persons.length + " RESULTS");
-                                        logArrayResults(dataPurified.possible_persons);
-                                        Pipl.internalCheck(dataPurified, params, nameattribute, function (correctIndividual) {
-                                            return callback(null, correctIndividual);
-                                        });
-                                    }
-                                    else {
-                                        return callback("no one found", null);
-                                    }
-                                }
+                            var newArrFiltered = [dataFiltered.person];
+                            Pipl.internalCheck(newArrFiltered, params, nameattribute, function (correctIndividual) {
+                                return callback(null);
                             });
                         }
                         else {
-                            return callback("no one found", null);
+                            logArrayResults(dataFiltered.possible_persons);
+                            Pipl.internalCheck(dataFiltered.possible_persons, params, nameattribute, function (correctIndividual) {
+                                if (dataFiltered.possible_persons.length >= 49) {
+                                    Pipl.personObjQuery(params, nameattribute, function (errPurified, dataPurified) {
+                                        if (errPurified) {
+                                            console.log("errPurified: ");
+                                            console.log(errPurified);
+                                            return callback(errPurified);
+                                        }
+                                        else if (dataPurified.person) {
+                                            console.log("THREE RUNS");
+                                            console.log("PERSON");
+                                            logObjectResults(dataPurified.person);
+                                            var newArrPurified = [dataPurified.person];
+                                            Pipl.internalCheck(newArrPurified, params, nameattribute, function (correctIndividual) {
+                                                return callback(null);
+                                            });
+                                        }
+                                        else if (dataPurified.possible_persons) {
+                                            console.log("THREE RUNS " + dataPurified.possible_persons.length + " RESULTS");
+                                            logArrayResults(dataPurified.possible_persons);
+                                            Pipl.internalCheck(dataPurified.possible_persons, params, nameattribute, function (correctIndividual) {
+                                                return callback(null);
+                                            });
+                                        }
+                                        else {
+                                            return callback("no one found in Purified Search");
+                                        }
+                                    });
+                                }
+                                else {
+                                    return callback(null);
+                                }
+                            });
                         }
-                    }
+                    });
                 });
-            }
-            else {
-                return callback("no one found", null);
             }
         }
     });
-    // look through addresses (how to decide which is newest)
 };
+
+
+
+
+
+                    //     else if (dataFiltered.possible_persons.length < 49) {
+                    //         console.log("TWO RUNS " + dataFiltered.possible_persons.length + " RESULTS");
+                    //         logArrayResults(dataFiltered.possible_persons);
+                    //         Pipl.internalCheck(dataFiltered, params, nameattribute, function (correctIndividual) {
+                    //             return callback(null, correctIndividual);
+                    //         });
+                    //     }
+                    //     else if (dataFiltered.possible_persons.length >= 49) {
+                    //         Pipl.personObjQuery(params, nameattribute, function (errPurified, dataPurified) {
+                    //             if (errPurified) {
+                    //                 console.log("errPurified: ");
+                    //                 console.log(errPurified);
+                    //                 return callback(errPurified, null);
+                    //             }
+                    //             else {
+                    //                 // console.log(dataPurified);
+                    //                 if (dataPurified.person) {
+                    //                     console.log("THREE RUNS");
+                    //                     console.log("PERSON");
+                    //                     logObjectResults(dataPurified.person);
+                    //                     return callback(null, dataPurified.person);
+                    //                 }
+                    //                 else if (dataPurified.possible_persons) {
+                    //                     console.log("THREE RUNS " + dataPurified.possible_persons.length + " RESULTS");
+                    //                     logArrayResults(dataPurified.possible_persons);
+                    //                     Pipl.internalCheck(dataPurified, params, nameattribute, function (correctIndividual) {
+                    //                         return callback(null, correctIndividual);
+                    //                     });
+                    //                 }
+                    //                 else {
+                    //                     return callback("no one found", null);
+                    //                 }
+                    //             }
+                    //         });
+                    //     }
+                    //     else {
+                    //         return callback("no one found", null);
+                    //     }
+                    // }
+    //             });
+    //         }
+    //         else {
+    //             return callback("no one found", null);
+    //         }
+    //     }
+    // });
+    // look through addresses (how to decide which is newest)
+// };
 
 Pipl.internalCheck = function(data, params, nameattribute, callback) {
 
@@ -249,9 +374,9 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
     var scoreArray = [];
 
     // loop through all possible_persons and add score to array
-    for (i=0; i < data.possible_persons.length; ++i) {
+    for (i=0; i < data.length; ++i) {
         var score = 0;
-        var obj = data.possible_persons[i];
+        var obj = data[i];
 
         // check date of birth
         if (obj.dob && obj.dob.display) {
@@ -331,8 +456,12 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
     }
     console.log(scoreArray);
     result_arr.push.apply(scoreArray);
+    high_objs.push(data[highIndex]);
+    high_scores.push(scoreArray[highIndex]);
     console.log(params[nameattribute] + " had highest score of " + scoreArray[highIndex]);
-    return callback(data.possible_persons[highIndex]);
+
+    // not really using this at the moment, but whatever
+    return callback(data[highIndex]);
 }
 
 var logArrayResults = function(arrayObjects) {
