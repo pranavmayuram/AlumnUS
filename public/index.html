@@ -10,16 +10,23 @@
   $(document)
       .ready(function() {
         $("#upload").on("click", function() {
-          $('#hidde-new-file').click(); 
+          $('#hidde-new-file').click();
       });
         $("#divFinal").on("click", function() {
           $('#hidde-final').click();
       });
     });
-  </script>
+</script>
 </head>
 
 <body>
+<span class="text-center">
+    <br/>
+    <h2>UMich AlumnUS</h2>
+    <h4>EECS Alumni Lookup Project</h4>
+    <!--<br/>
+    <img class ="center-block" src="https://www.eecs.umich.edu/eecs/images/EECS-Logo-Mobile.png" width="75"/>-->
+</span>
 <br/>
 <form name="uploadForm" id = "uploadForm" action="/api/uploadExcel" method="post" enctype="multipart/form-data">
   <!--<div class="text-center">
