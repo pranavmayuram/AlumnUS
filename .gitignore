@@ -1,5 +1,6 @@
 node_modules
 config.json
 .DS_Store
+JSON
 uploads
 preview.key

@@ -27,7 +27,7 @@ Excel.upload = function(params, fileInfo, callback) {
 
             var node_excel = node_xj({
 	            input: fileInfo.path,  // input xls
-	            output: jsonpath, // output json 			// can this be exported to a variable? (can also do from a file if need be)
+	            output: null, // output json 			// can this be exported to a variable? (can also do from a file if need be)
 	            sheet: params.sheetname  // specific sheetname
 	        }, function(err, result) {
 	            if(err) {
@@ -35,6 +35,7 @@ Excel.upload = function(params, fileInfo, callback) {
 	            	return callback(err, null);
 	            }
 	            else {
+                    fs.writeFileSync(jsonpath, result);
                     fs.unlink(fileInfo.path, function (error) {
                         if (error) {
                             return callback(error, null);
