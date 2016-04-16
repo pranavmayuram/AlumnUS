@@ -4,6 +4,8 @@
 
 ####Introduction
 
+***If your environment is not set up with the project files and Node.js version 0.12.7, please refer to <a href="./SETUP.md">SETUP.md</a> to get started.***
+
 AlumnUS consists of a simple UI and a REST API which can be used to find Alumni that U of M has lost touch with. The expected input is an Excel file, and in response, the app will send a new Excel file with the addresses of the candidates that are shown. The back-end REST API for AlumnUS is built with Node.js, while the front-end uses HTML, and a simple HTTP POST request to pass the excel spreadsheet to the back-end.
 
 The AlumnUS API will call another people-search API, developed by Pipl, which returns details of individuals who could be a match for the parameters the AlumnUS API passes to it. It will store information from its call to the people-search API into a MySQL datastore, which can later be queried to find information about historical searches the AlumnUS API has performed.
