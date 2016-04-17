@@ -88,7 +88,7 @@ var appRouter = function(app) {
 
         var formed_JSON = {
             educations : [{"school":"University of Michigan"}],
-            gender : {"content": "Male"},
+            gender : {"content": "male"},
             names : [{"raw": "Pranav Mayuram"}],
             dob : {
                 "date_range": {

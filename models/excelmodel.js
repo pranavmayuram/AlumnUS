@@ -35,7 +35,7 @@ Excel.upload = function(params, fileInfo, callback) {
 	            	return callback(err, null);
 	            }
 	            else {
-                    fs.writeFileSync(jsonpath, result);
+                    fs.writeFileSync(jsonpath, JSON.stringify(result));
                     fs.unlink(fileInfo.path, function (error) {
                         if (error) {
                             return callback(error, null);

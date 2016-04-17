@@ -24,7 +24,7 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
     var date_end = (moment().year() - params.Age + 2) + "-12-31";
     var formed_JSON = {
         educations : [{"school":"University of Michigan"}],
-        gender : {"content":params.Age},
+        gender : {"content":params.Gender.toLowerCase()},
         names : [{"raw":params[nameattribute]}],
         dob : {
             "date_range": {
@@ -34,14 +34,18 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
         }
     };
 
+    console.log(formed_JSON);
+
     // {"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}
-    request.post({'url': 'http://api.pipl.com/search/v4/'} , {
+    // change to take url out of object later!!!! INTENTIONALLY CAUSING ERROR HERE!
+    request.post({"url": 'http://api.pipl.com/search/v4/'} , {
         form: {
             person: JSON.stringify(formed_JSON),
             key: config.piplKey
         }
     },
     function (error, response, body) {
+        // var bodyParsed = JSON.parse(body);
         if (error || body.error) {
             console.log("error: ");
             console.log(error);
@@ -50,9 +54,9 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
         }
         console.log("BODY:");
         var bodyParsed = JSON.parse(body);
-        console.log(bodyParsed);
         if (bodyParsed.possible_persons) {
-            console.log("dataPurified has " + bodyParsed.possible_persons.length + " results");
+            var posspers = JSON.parse(bodyParsed.possible_persons);
+            console.log("dataPurified has " + posspers.length + " results");
         }
         else {
             console.log("no dataPurified possible_persons");
@@ -235,7 +239,8 @@ Pipl.filter = function(params, nameattribute, callback) {
                                         else if (dataPurified.person) {
                                             console.log("THREE RUNS");
                                             console.log("PERSON");
-                                            logObjectResults(dataPurified.person);
+                                            var parsed_obj = JSON.parse(dataPurified.person);
+                                            // logObjectResults(dataPurified.person);
                                             var newArrPurified = [dataPurified.person];
                                             Pipl.internalCheck(newArrPurified, params, nameattribute, function (correctIndividual) {
                                                 return callback(null);
@@ -243,8 +248,11 @@ Pipl.filter = function(params, nameattribute, callback) {
                                         }
                                         else if (dataPurified.possible_persons) {
                                             console.log("THREE RUNS " + dataPurified.possible_persons.length + " RESULTS");
-                                            logArrayResults(dataPurified.possible_persons);
-                                            Pipl.internalCheck(dataPurified.possible_persons, params, nameattribute, function (correctIndividual) {
+                                            // var parsed_array = JSON.parse(dataPurified.possible_persons);
+                                            // console.log("typeof possible_persons: " + (typeof parsed_array));
+                                            // console.log("typeof parsed_array[0]: " + (typeof parsed_array[0]));
+                                            // logArrayResults(parsed_array);
+                                            Pipl.internalCheck(parsed_array, params, nameattribute, function (correctIndividual) {
                                                 return callback(null);
                                             });
                                         }
@@ -278,6 +286,10 @@ Pipl.internalCheck = function(data, params, nameattribute, callback) {
     for (i=0; i < data.length; ++i) {
         var score = 0;
         var obj = data[i];
+
+        if ((typeof obj) === "string") {
+            obj = JSON.parse(obj);
+        }
 
         // check date of birth
         if (obj.dob && obj.dob.display) {
@@ -369,6 +381,9 @@ var logArrayResults = function(arrayObjects) {
     for (i=0; i < arrayObjects.length; ++i) {
         var obj = arrayObjects[i];
         console.log("-------------------result "+i+"------------------");
+        if ((typeof obj) === "string") {
+            obj = JSON.parse(obj);
+        }
         Object.keys(obj).forEach(function(key) {
             // console.log(params[nameattribute]);
             if (key != '@search_pointer') {
