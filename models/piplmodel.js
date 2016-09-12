@@ -18,7 +18,6 @@ function Pipl() { };
 
 Pipl.personObjQuery = function(params, nameattribute, callback) {
 
-    // var formed_JSON = JSON.stringify({"emails":[{"address": "clark.kent@example.com"}],"addresses":[{"country":"US", "state": "KS", "city": "Metropolis"},{"country":"US", "state": "KS", "city": "Metropolis"}]});
     // could use the "degree" attribute if you want?
     var date_start = (moment().year() - params.Age - 3) + "-01-01";
     var date_end = (moment().year() - params.Age + 2) + "-12-31";
@@ -36,9 +35,8 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
 
     console.log(formed_JSON);
 
-    // {"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}
     // change to take url out of object later!!!! INTENTIONALLY CAUSING ERROR HERE!
-    request.post({"url": 'http://api.pipl.com/search/v4/'} , {
+    request.post('http://api.pipl.com/search/v5' , {
         form: {
             person: JSON.stringify(formed_JSON),
             key: config.piplKey
@@ -50,12 +48,14 @@ Pipl.personObjQuery = function(params, nameattribute, callback) {
             console.log("error: ");
             console.log(error);
             return callback(error, null);
-
         }
         console.log("BODY:");
         var bodyParsed = JSON.parse(body);
+        console.log("bodyParsed:");
+        console.log(bodyParsed);
         if (bodyParsed.possible_persons) {
-            var posspers = JSON.parse(bodyParsed.possible_persons);
+            var posspers = bodyParsed.possible_persons;
+            console.log(posspers);
             console.log("dataPurified has " + posspers.length + " results");
         }
         else {
@@ -181,14 +181,21 @@ Pipl.searchJSONfile = function(filename, params, callback) {
 
 Pipl.filter = function(params, nameattribute, callback) {
 
-    pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
-
+    request.post('http://api.pipl.com/search/v5' , {
+        form: {
+            raw_name: params[nameattribute],
+            key: config.piplKey
+        }
+    }, function(err, httpResponse, dataString) {
         if (err) {
             console.log("error: ");
             console.log(err);
+            console.log(dataString);
+            console.log(httpResponse);
             return callback(err);
         }
         else {
+            var data = JSON.parse(dataString);
             console.log("-----------------------------"+params[nameattribute]+"-----------------");
             if (data.person) {
                 console.log("ONE RUN");
@@ -211,13 +218,22 @@ Pipl.filter = function(params, nameattribute, callback) {
             }
             else if (data.possible_persons.length >= 49) {
                 Pipl.internalCheck(data.possible_persons, params, nameattribute, function (correctIndividual) {
-                    pipl.search.query({"raw_name": params[nameattribute], "gender": params.Gender.toLowerCase(), "age": params.Age}, function (errFiltered, dataFiltered) {
+                    request.post('http://api.pipl.com/search/v5' , {
+                        form: {
+                            raw_name: params[nameattribute],
+                            gender: params.Gender.toLowerCase(),
+                            age: params.Age,
+                            key: config.piplKey
+                        }
+                    },
+                    function (errFiltered, httpResponse, dataFilteredString) {
                         if (errFiltered) {
                             console.log("errFiltered: ");
                             console.log(errFiltered);
                             return callback(errFiltered);
                         }
-                        else if (dataFiltered.person) {
+                        var dataFiltered = JSON.parse(dataFilteredString);
+                        if (dataFiltered.person) {
                             console.log("TWO RUNS");
                             console.log("PERSON");
                             logObjectResults(dataFiltered.person);
@@ -252,7 +268,7 @@ Pipl.filter = function(params, nameattribute, callback) {
                                             // console.log("typeof possible_persons: " + (typeof parsed_array));
                                             // console.log("typeof parsed_array[0]: " + (typeof parsed_array[0]));
                                             // logArrayResults(parsed_array);
-                                            Pipl.internalCheck(parsed_array, params, nameattribute, function (correctIndividual) {
+                                            Pipl.internalCheck(dataPurified.possible_persons, params, nameattribute, function (correctIndividual) {
                                                 return callback(null);
                                             });
                                         }
@@ -404,192 +420,6 @@ var logObjectResults = function(someObj) {
         // having some issues, keeps hitting the same name
     });
 }
-
-
-// take in params from form when uploaded to find attribute that contains name
-// TESTING - DEPRECATED
-Pipl.metadata = function(params, nameattribute, callback) {
-
-    pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
-
-        if (err) {
-            console.log("error: ");
-            console.log(err);
-            return callback(err, null);
-        }
-        else {
-            var universityExists = universityTrue = universityFalse = universityNonExistent = 0;
-            var ageExists = ageTrue = ageFalse = ageNonExistent = 0;
-            var genderExists = genderTrue = genderFalse = genderNonExistent = 0;
-            if (data.person) {
-                console.log(params[nameattribute] + " : person");
-                console.log("------------------------------------------");
-                var obj = data.person;
-
-                // check date of birth
-                if (obj.dob && obj.dob.display) {
-                    console.log("dob display: "+obj.dob.display);
-                    console.log("params Age: "+params.Age);
-                    ++ageExists;
-                    if (obj.dob.display == params.Age) {
-                        ++ageTrue;
-                    }
-                    else {
-                        ++ageFalse;
-                    }
-                }
-                else {
-                    ++ageNonExistent;
-                }
-
-                // check gender
-                if (obj.gender && obj.gender.content) {
-                    ++genderExists;
-                    if (obj.gender.content == params.Gender) {
-                        ++genderTrue;
-                    }
-                    else {
-                        ++genderFalse;
-                    }
-                }
-                else {
-                    ++genderNonExistent;
-                }
-
-                // check university
-                if (obj.educations) {
-                    ++universityExists;
-                    for (j=0; j < obj.educations.length; ++j) {
-                        if (obj.educations[j].school == 'University of Michigan') {
-                            ++universityTrue;
-                            break;
-                        }
-                        else if (j == (obj.educations.length - 1)) {
-                            ++universityFalse;
-                        }
-                    }
-                }
-                else {
-                    ++universityNonExistent;
-                }
-                console.log("AGE \nageExists: "+ageExists+"\nageNonExistent: "+ageNonExistent+"\nageTrue: "+ageTrue+"\nageFalse: "+ageFalse+"\n");
-                console.log("GENDER \ngenderExists: "+genderExists+"\ngenderNonExistent: "+genderNonExistent+"\ngenderTrue: "+genderTrue+"\ngenderFalse: "+genderFalse+"\n");
-                console.log("EDUCATION \nuniversityExists: "+universityExists+"\nuniversityNonExistent: "+universityNonExistent+"\nuniversityTrue: "+universityTrue+"\nuniversityFalse: "+universityFalse+"\n");
-                return callback(null, "person found");
-            }
-            else if (data.possible_persons) {
-                var dataobj = data.possible_persons;
-                // console.log(dataobj.length);
-                var lengthdataobj = dataobj.length;
-                console.log(params[nameattribute] + " : "+lengthdataobj+" possible_persons");
-                console.log("------------------------------------------");
-                for (i=0; i < lengthdataobj; ++i) {
-                    var obj = data.possible_persons[i];
-
-                    // check date of birth
-                    if (obj.dob && obj.dob.display) {
-                        ++ageExists;
-                        // age given by pipl displays as '42 years old', this reads until first space
-                        if (obj.dob.display.substr(0, obj.dob.display.indexOf(' ')) == params.Age) {
-                            ++ageTrue;
-                        }
-                        else {
-                            ++ageFalse;
-                        }
-                    }
-                    else {
-                        ++ageNonExistent;
-                    }
-
-                    // check gender
-                    if (obj.gender && obj.gender.content) {
-                        ++genderExists;
-                        // gender given by pipl is lowercase, check equivalence with both lowercase
-                        if (obj.gender.content.toLowerCase() == params.Gender.toLowerCase()) {
-                            ++genderTrue;
-                        }
-                        else {
-                            ++genderFalse;
-                        }
-                    }
-                    else {
-                        ++genderNonExistent;
-                    }
-
-                    // check university -- issues with university false
-                    if (obj.educations) {
-                        ++universityExists;
-                        for (j=0; j < obj.educations.length; ++j) {
-                            if (obj.educations[j].school == 'University of Michigan') {
-                                ++universityTrue;
-                                break;
-                            }
-                            else if (j == (obj.educations.length - 1)) {
-                                ++universityFalse;
-                            }
-                        }
-                    }
-                    else {
-                        ++universityNonExistent;
-                    }
-                }
-                console.log("AGE \nageExists: "+ageExists+"\nageNonExistent: "+ageNonExistent+"\nageTrue: "+ageTrue+"\nageFalse: "+ageFalse+"\n");
-                console.log("GENDER \ngenderExists: "+genderExists+"\ngenderNonExistent: "+genderNonExistent+"\ngenderTrue: "+genderTrue+"\ngenderFalse: "+genderFalse+"\n");
-                console.log("EDUCATION \nuniversityExists: "+universityExists+"\nuniversityNonExistent: "+universityNonExistent+"\nuniversityTrue: "+universityTrue+"\nuniversityFalse: "+universityFalse+"\n");
-                return callback(null, "possible_persons found");
-            }
-            else {
-                console.log(params[nameattribute]+" : no person found");
-                return callback(null, "no one found");
-            }
-            //console.log("data: ")
-            /*
-            if (data.possible_persons && data.possible_persons[0]) {
-                var obj = data.possible_persons[0];
-                /*Object.keys(obj).forEach(function(key) {
-                    console.log(params[nameattribute]);
-                    if (key != '@search_pointer') {
-                        console.log(key, obj[key]);
-                    }
-                    // having some issues, keeps hitting the same name
-                });
-                return callback(null, data.possible_persons[0]);
-            }
-            else {
-                console.log(data);
-
-                // should soon be changed to callback(data, null);
-                return callback(null, data);
-            }
-            //console.log(data.possible_persons[0]); */
-        }
-    });
-};
-
-// DEPRECATED
-Pipl.searchIndividual = function(params, nameattribute, callback) {
-
-    pipl.search.query({"raw_name": params[nameattribute]}, function(err, data) {
-
-        if (err) {
-            console.log("error: ");
-            console.log(err);
-            return callback(err, null);
-        }
-        else {
-            if (data.person) {
-                return callback(null, data.person);
-            }
-            else if (data.possible_persons) {
-                return callback(null, data.possible_persons[0]);
-            }
-            else {
-                return callback("no one found", null);
-            }
-        }
-    });
-    // look through addresses (how to decide which is newest)
-};
 
 
 module.exports = Pipl;

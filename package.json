@@ -17,7 +17,6 @@
     "multer": "^1.0.6",
     "node-forge": "^0.6.30",
     "nodemon": "^1.4.0",
-    "pipl": "^0.1.1",
     "request": "^2.63.0",
     "uuid": "^2.0.1",
     "xls-to-json": "^0.3.2"
