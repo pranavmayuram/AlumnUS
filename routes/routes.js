@@ -120,7 +120,6 @@ var appRouter = function(app) {
         console.log("endpoint hit");
         console.log(req.body);
         console.log(req.file);
-        // var x = {"sheetname": "Sheet1", "path": "ExcelSampleRetry.xls"};
 
         Excel.upload(req.body, req.file, function(error, JSONfilename) {
             if (error) {
