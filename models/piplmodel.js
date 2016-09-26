@@ -12,8 +12,6 @@ var result_arr  = [];
 var high_scores = [];
 var high_objs   = [];
 
-// max number of API requests pipl can handle per second
-
 function Pipl() { };
 
 Pipl.personObjQuery = function(params, nameattribute, callback) {
@@ -99,22 +97,46 @@ Pipl.searchJSONfile = function(filename, params, callback) {
 
                 var err_code = "";
                 console.log((new Date().getTime() - start)/1000);
+
+                // initialize all fields to not found
+                var alumnus_fields = ["AlumnUS address", "AlumnUS username", "AlumnUS job employer",
+                                      "AlumnUS job title", "AlumnUS job industry"];
+                for (i; i < alumnus_fields.length; ++i) {
+                    person[alumnus_fields[i]] = "NOT FOUND";
+                }
+
+                // parse and set arguments
                 if (result) {
                     if (result.address) {
                         console.log(params.nameattribute + " lives at: " + result.address.display);
-                        person.address = result.address.display;
+                        person["AlumnUS address"] = result.address.display;
                     }
                     else if (result.addresses) {
                         console.log(params.nameattribute + " lives at: " + result.addresses[0].display);
-                        person.address = result.addresses[0].display;
+                        person["AlumnUS address"] = result.addresses[0].display;
                     }
-                    else {
-                        person.address = "NOT FOUND";
+
+                    if (result.usernames) {
+                        var username = result.usernames[0]["content"];
+                        console.log(params.nameattribute + " has username of: " + username);
+                        person["AlumnUS username"] = username;
                     }
-                }
-                else {
-                    // handles cases of no results found
-                    person.address = "NOT FOUND";
+
+                    if (result.jobs) {
+                        var jobData = result.jobs[0];
+                        if (jobData) {
+                            if (jobData["organization"]) {
+                                console.log(params.nameattribute + " works at: " + jobData["organization"]);
+                                person["AlumnUS job employer"] = jobData["organization"];
+                            }
+                            if (jobData["title"]) {
+                                person["AlumnUS job title"] = jobData["title"];
+                            }
+                            if (jobData["industry"]) {
+                                person["AlumnUS job industry"] = jobData["industry"];
+                            }
+                        }
+                    }
                 }
 
 
@@ -134,7 +156,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
                 console.log("highScore/4: " + highScore/4);
                 console.log("num_same: " + num_same + ", num_close: " + num_close);
 
-                if (person.address === "NOT FOUND") {
+                if (person["AlumnUS address"] === "NOT FOUND") {
                     err_code = "NR";
                 }
                 else if (highScore >= 8) {
