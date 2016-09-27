@@ -5,6 +5,7 @@ var pipl        = require('pipl')(config.piplKey);
 var Bottleneck  = require("bottleneck");
 var request     = require("request");
 var moment      = require("moment");
+var appRouter   = require("../routes/routes.js");
 
 var MAX_RPS     = 1;
 var limiter     = new Bottleneck(MAX_RPS, 500);
@@ -71,6 +72,8 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     var start = new Date().getTime();
     console.log(start);
     console.log("currentJSONlength : " + currentJSON.length);
+    appRouter.requestProcessing["total"] = currentJSON.length;
+    appRouter.requestProcessing["processed"] = 0;
     result_arr = [];
     high_scores = [];
     high_objs = [];
@@ -177,6 +180,8 @@ Pipl.searchJSONfile = function(filename, params, callback) {
                 result_arr = [];
                 high_scores = [];
                 high_objs = [];
+
+                ++appRouter.requestProcessing["processed"];
 
                 get_out();
                 cb();

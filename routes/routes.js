@@ -26,6 +26,9 @@ var upload      = multer({dest: './uploads/',
 });
 
 
+var requestProcessing = {"total": -1, "processed": -1};
+exports.requestProcessing = requestProcessing;
+
 // var options = {
 //     timeout:  3000
 //   , pool:     { maxSockets:  Infinity }
@@ -115,11 +118,17 @@ var appRouter = function(app) {
         });
     });
 
+    app.get("/api/requestProcessing", function(req, res) {
+        return res.json(requestProcessing);
+    });
 
     app.post("/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
         console.log("endpoint hit");
         console.log(req.body);
         console.log(req.file);
+        if (requestProcessing["total"] > -1) {
+            return res.send("A request is currently processing, please try again in a few minutes, once the request has been processed.");
+        }
 
         Excel.upload(req.body, req.file, function(error, JSONfilename) {
             if (error) {
@@ -150,6 +159,7 @@ var appRouter = function(app) {
                                 console.log(err);
                             }
                             fs.unlinkSync(fileLocation);
+                            requestProcessing = {"total": -1, "processed": -1};
                             console.log("Excel file "+fileLocation+" successfully deleted");
                         });
                     });
