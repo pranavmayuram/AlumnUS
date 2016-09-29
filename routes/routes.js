@@ -3,7 +3,6 @@ var async       = require("async");
 var multer      = require("multer");
 var request     = require('request');
 var config      = require('../config.json');
-var pipl        = require('pipl')(config.piplKey);
 var fs          = require('fs');
 var node_xj     = require("xls-to-json");
 var Excel       = require("../models/excelmodel");

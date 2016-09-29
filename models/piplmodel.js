@@ -1,7 +1,6 @@
 var async       = require("async");
 var fs			= require("fs");
 var config      = require('../config.json');
-var pipl        = require('pipl')(config.piplKey);
 var Bottleneck  = require("bottleneck");
 var request     = require("request");
 var moment      = require("moment");
