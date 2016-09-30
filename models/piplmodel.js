@@ -71,8 +71,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
     var start = new Date().getTime();
     console.log(start);
     console.log("currentJSONlength : " + currentJSON.length);
-    appRouter.requestProcessing["total"] = currentJSON.length;
-    appRouter.requestProcessing["processed"] = 0;
+    appRouter.RequestProcessing.setTotal(currentJSON.length);
     result_arr = [];
     high_scores = [];
     high_objs = [];
@@ -83,6 +82,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
             Pipl.filter (person, params.nameattribute, function(error) {
                 if (error) {
                     console.log(error);
+                    return callback(error, null);
                 }
 
                 // determine address here!!
@@ -103,7 +103,7 @@ Pipl.searchJSONfile = function(filename, params, callback) {
                 // initialize all fields to not found
                 var alumnus_fields = ["AlumnUS address", "AlumnUS username", "AlumnUS job employer",
                                       "AlumnUS job title", "AlumnUS job industry"];
-                for (i; i < alumnus_fields.length; ++i) {
+                for (i=0; i < alumnus_fields.length; ++i) {
                     person[alumnus_fields[i]] = "NOT FOUND";
                 }
 
@@ -174,13 +174,12 @@ Pipl.searchJSONfile = function(filename, params, callback) {
                     err_code = "MD";
                 }
 
+                appRouter.RequestProcessing.incrementProcessed();
                 person.errorCode = err_code;
 
                 result_arr = [];
                 high_scores = [];
                 high_objs = [];
-
-                ++appRouter.requestProcessing["processed"];
 
                 get_out();
                 cb();
@@ -232,7 +231,7 @@ Pipl.filter = function(params, nameattribute, callback) {
                     return callback(null);
                 });
             }
-            else if (data.possible_persons.length < 49) {
+            else if (data.possible_persons && data.possible_persons.length < 49) {
                 // if (data.possible_persons.length == 0) {
                 //     return callback("no one found", null);
                 // }
@@ -242,7 +241,7 @@ Pipl.filter = function(params, nameattribute, callback) {
                     return callback(null);
                 });
             }
-            else if (data.possible_persons.length >= 49) {
+            else if (data.possible_persons && data.possible_persons.length >= 49) {
                 Pipl.internalCheck(data.possible_persons, params, nameattribute, function (correctIndividual) {
                     request.post('http://api.pipl.com/search/v5' , {
                         form: {
@@ -304,12 +303,15 @@ Pipl.filter = function(params, nameattribute, callback) {
                                     });
                                 }
                                 else {
-                                    return callback(null);
+                                    return callback("Daily limit for API exceeded, or no people given in Excel sheet specified.");
                                 }
                             });
                         }
                     });
                 });
+            }
+            else {
+                return callback(null);
             }
         }
     });
