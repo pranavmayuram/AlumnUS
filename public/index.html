@@ -40,7 +40,7 @@
         <h4>EECS Alumni Lookup Project</h4>
     </span>
     <br/>
-    <form name="uploadForm" id="uploadForm" action="/api/uploadExcel" method="post" enctype="multipart/form-data">
+    <form name="uploadForm" id="uploadForm" action="{{excelUploadURL}}" method="post" enctype="multipart/form-data">
         <br/>
         <input type="file" id="hidde-new-file" name="userPhoto" value="" accept=".xls" style="margin:0px auto; display:block;" required/>
         <div style="text-align:center">
@@ -56,12 +56,18 @@
         </div>
     </form>
     <br/>
-    <div class="row text-center">
+    <div class="text-center">
         <div class="col-sm-4 col-sm-offset-4">
-            <p> Clicking this button will send your form to the server. Expect a response shortly. </p>
+            <p class="row"> Clicking this button will send your form to the server.<br/> Expect a response shortly. </p>
+            <div class="row progress" ng-show="requestProcessing.total">
+                <div class="progress-bar" role="progressbar" aria-valuenow="70"
+                aria-valuemin="0" aria-valuemax="100" ng-style="{ 'width': loadingPercentage() }">
+                    {{requestProcessing.processed}} / {{requestProcessing.total}}
+                </div>
+            </div>
+            <!-- <h4 class="row" ng-show="requestProcessing.total">Request progress: <strong>{{requestProcessing.processed}} / {{requestProcessing.total}}</strong></h4> -->
         </div>
         <br/>
-        <h4 ng-show="requestProcessing.total">Request progress: <strong>{{requestProcessing.processed}} / {{requestProcessing.total}}</strong></h4>
     </div>
 </body>
 </html>
