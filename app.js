@@ -8,7 +8,7 @@ var fs              = require('fs');
 var http            = require('http');
 var multer          = require("multer");
 
-var upload          = multer({dest: './uploads/', 
+var upload          = multer({dest: './uploads/',
     onFileUploadStart: function (file) {
       console.log(file.originalname + ' is starting ...')
     },
@@ -37,35 +37,18 @@ app.use(express.static(__dirname + '/bower_components'));
 app.use(express.static(__dirname + '/node_modules'));
 app.use(express.static(__dirname + '/JSON'));
 
-// multer setup for excel upload
-/*
-app.use(multer({dest: './uploads/', 
-    onFileUploadStart: function (file) {
-      console.log(file.originalname + ' is starting ...')
-    },
-    onFileUploadComplete: function (file) {
-      console.log(file.fieldname + ' uploaded to  ' + file.path)
-      done=true;
-    },
-    limits: {
-      fieldNameSize: 100,
-      fileSize: 20000000,
-      files: 1
-    }
-}); */
-
-/* create cluster and create buckets using config file
-var cluster = new couchbase.Cluster(config.couchbase.server);
-module.exports.userBucket = cluster.openBucket(config.couchbase.userBucket);
-module.exports.pictureBucket = cluster.openBucket(config.couchbase.pictureBucket);
-module.exports.publishBucket = cluster.openBucket(config.couchbase.publishBucket);*/
-
 // include API endpoints
 var routes = require("./routes/routes.js")(app);
+
+// make sure app does not crash, send 500 errors instead
+app.use(function errorHandler(err, req, res, next) {
+  res.status(500);
+  res.render('error', { error: err });
+});
 
 // set up HTTP and HTTPS if possible
 var httpServer = http.createServer(app);
 httpServer.listen(config.setup.AlumnUSPort);
 
-// inform user of IP                     
+// inform user of IP
 console.log('View AlumnUS at localhost:' + config.setup.AlumnUSPort);
