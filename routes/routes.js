@@ -24,7 +24,6 @@ var upload      = multer({dest: './uploads/',
     }
 });
 
-var baseRoute               = "/alumnus";
 var RequestProcessing       = {
     total: -1,
     processed: -1,
@@ -47,13 +46,13 @@ var RequestProcessing       = {
 exports.RequestProcessing = RequestProcessing;
 
 
-var appRouter = function(app) {
+var appRouter = function(router) {
 
-    app.get(baseRoute + "/api/requestProcessing", function(req, res) {
+    router.get("/api/requestProcessing", function(req, res) {
         return res.json(RequestProcessing.getObj());
     });
 
-    app.post(baseRoute + "/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
+    router.post("/api/uploadExcel", upload.single('userPhoto'), function(req, res) {
         console.log("endpoint hit");
         console.log(req.body);
         console.log(req.file);
@@ -104,7 +103,7 @@ var appRouter = function(app) {
         });
     });
 
-    app.get(baseRoute, function(req, res) {
+    router.get("/", function(req, res) {
         console.log("getting to index.html"); // load the single view file (angular will handle the page changes on the front-end)
         res.sendfile('public/index.html');
     });

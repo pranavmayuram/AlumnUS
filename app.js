@@ -1,6 +1,7 @@
 // modules for the application
 var express         = require('express');
 var app             = express();
+var router          = express.Router([]);
 var config          = require("./config");
 var bodyParser      = require('body-parser');
 var morgan          = require('morgan');
@@ -37,8 +38,11 @@ app.use(express.static(__dirname + '/bower_components'));
 app.use(express.static(__dirname + '/node_modules'));
 app.use(express.static(__dirname + '/JSON'));
 
+// route from "/alumnus"
+app.use('/alumnus', router);
+
 // include API endpoints
-var routes = require("./routes/routes.js")(app);
+var routes = require("./routes/routes.js")(router);
 
 // make sure app does not crash, send 500 errors instead
 app.use(function errorHandler(err, req, res, next) {
