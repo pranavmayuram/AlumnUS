@@ -82,7 +82,6 @@ Pipl.searchJSONfile = function(filename, params, callback) {
             Pipl.filter (person, params.nameattribute, function(error) {
                 if (error) {
                     console.log(error);
-                    return callback(error, null);
                 }
 
                 // determine address here!!
