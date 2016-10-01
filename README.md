@@ -4,7 +4,7 @@
 
 ####Introduction
 
-***If your environment is not set up with the project files and Node.js version 0.12.7, please refer to <a href="./SETUP.md">SETUP.md</a> to get started.***
+***If your environment is not set up with the project files and Node.js version 0.12.7, please refer to <a href="./SETUP.md">SETUP.md</a> to get started. To use more recent versions of Node.js, refer to the 'Known Issues' section for a workaround.***
 
 AlumnUS consists of a simple UI and a REST API which can be used to find Alumni that U of M has lost touch with. The expected input is an Excel file, and in response, the app will send a new Excel file with the addresses of the candidates that are shown. The back-end REST API for AlumnUS is built with Node.js, while the front-end uses HTML, and a simple HTTP POST request to pass the excel spreadsheet to the back-end.
 
@@ -26,7 +26,7 @@ There is a basic UI, which was pictured in the introduction, from which a user c
 
 A file is then downloaded to the user, along with two columns appended. These include an "address" field, and a "reliability" field. The "address" field stores the address of the individual that the AlumnUS API matches up to the individual on the given row. The "reliability" field stores a code that pertains how accurate the result is presumed to be. This is generated based on the ranking for that individual whose "address" is included. It essentially accounts for the situations where there are too many individuals to find an ideal result, when there is no result found, or when the result is simply weak and doesn't fulfill some of the parameters passed by the user. This allows for filtration when looking at the Excel sheet that is output to the user.
 
-######Response codes:
+######Response codes
 * **"SR"** - Output when the result is considered very strong; many of the conditions were satisfied
 * **"MD"** - Output when the result is moderately strong; around half of the conditions were satisfied
 * **"WK"** - Output when the result is weak; doesn't pass many of the conditions given by the user
@@ -46,4 +46,9 @@ There are a few different tools the app makes use of:
 * <a href="https://github.com/expressjs/multer">Multer for file uploads (Excel sheet)</a>
 * <a href="https://www.npmjs.com/package/xls-to-json">xls-to-json</a>
 * <a href="https://github.com/rikkertkoppes/json2xls">json2xls</a>
+
+####Known Issues
+* Using node in a version higher than 0.12.7 causes issues with the xls-to-json package.
+  * This causes problems due to a dependency xls-to-json relies on.
+  * To fix this, comment out a line that says ```mdb.length = 2 * len; ``` in **node_modules/xls-to-json/node_modules/xlsjs/dist/cpexcel.js**
 
