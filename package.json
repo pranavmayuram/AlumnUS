@@ -8,6 +8,7 @@
     "async": "~1.4.0",
     "body-parser": "~1.5.2",
     "bottleneck": "^1.11.0",
+    "cors": "^2.8.1",
     "express": "~4.7.2",
     "gulp": "~3.9.0",
     "http": "^0.0.0",
