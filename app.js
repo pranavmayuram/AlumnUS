@@ -1,7 +1,10 @@
 // modules for the application
 var express         = require('express');
 var app             = express();
-var router          = express.Router([]);
+app.enable('strict routing');
+var router          = express.Router({
+    strict : app.get('strict routing')
+});
 var slash           = require('express-slash');
 var config          = require("./config");
 var bodyParser      = require('body-parser');
@@ -26,7 +29,6 @@ var upload          = multer({dest: './uploads/',
 });
 
 // use commands
-app.enable('strict routing');
 app.use(bodyParser.urlencoded({extended:true, limit: '4mb'}));
 app.use(bodyParser.json({limit: '4mb'}));
 app.use(morgan('dev'));
