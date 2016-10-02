@@ -30,14 +30,14 @@ app.use(bodyParser.json({limit: '4mb'}));
 app.use(morgan('dev'));
 
 // take care of trailing slashes
-// app.use(function(req, res, next) {
-//     if (req.path.substr(-1) == '/' && req.path.length > 1) {
-//         var query = req.url.slice(req.path.length);
-//         res.redirect(301, req.path.slice(0, -1) + query);
-//     } else {
-//         next();
-//     }
-// });
+app.use(function(req, res, next) {
+    if (req.path.substr(-1) == '/' && req.path.length > 1) {
+        var query = req.url.slice(req.path.length);
+        res.redirect(301, req.path.slice(0, -1) + query);
+    } else {
+        next();
+    }
+});
 
 // connect directories to save in memory before app is run, makes filepaths simpler
 app.use(express.static(__dirname + '/'));
