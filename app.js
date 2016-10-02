@@ -1,6 +1,7 @@
 // modules for the application
 var express         = require('express');
 var app             = express();
+var router          = express.Router([]);
 var config          = require("./config");
 var bodyParser      = require('body-parser');
 var morgan          = require('morgan');
