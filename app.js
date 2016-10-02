@@ -59,8 +59,8 @@ app.get("/alumnus", function(req, res) {
 });
 
 app.get("/alumnus/", function(req, res) {
-    res.redirect(301, "/alumnus");
-})
+    res.redirect("/alumnus");
+});
 
 // make sure app does not crash, send 500 errors instead
 app.use(function errorHandler(err, req, res, next) {
