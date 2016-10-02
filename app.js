@@ -58,6 +58,10 @@ app.get("/alumnus", function(req, res) {
     res.sendfile('public/index.html');
 });
 
+app.get("/alumnus/", function(req, res) {
+    res.redirect(301, "/alumnus");
+})
+
 // make sure app does not crash, send 500 errors instead
 app.use(function errorHandler(err, req, res, next) {
   res.status(500);
