@@ -2,6 +2,7 @@
 var express         = require('express');
 var app             = express();
 var router          = express.Router([]);
+var slash           = require('express-slash');
 var config          = require("./config");
 var bodyParser      = require('body-parser');
 var morgan          = require('morgan');
@@ -40,6 +41,7 @@ app.use(express.static(__dirname + '/JSON'));
 
 // route from "/alumnus"
 app.use('/alumnus', router);
+app.use(slash());
 
 // include API endpoints
 var routes = require("./routes/routes.js")(router);
