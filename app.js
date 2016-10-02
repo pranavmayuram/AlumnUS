@@ -53,6 +53,10 @@ app.use('/alumnus', router);
 
 // include API endpoints
 var routes = require("./routes/routes.js")(router);
+app.get("/alumnus", function(req, res) {
+    console.log("getting to index.html"); // load the single view file (angular will handle the page changes on the front-end)
+    res.sendfile('public/index.html');
+});
 
 // make sure app does not crash, send 500 errors instead
 app.use(function errorHandler(err, req, res, next) {
