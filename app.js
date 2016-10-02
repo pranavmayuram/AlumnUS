@@ -1,11 +1,6 @@
 // modules for the application
 var express         = require('express');
 var app             = express();
-app.enable('strict routing');
-var router          = express.Router({
-    strict : app.get('strict routing')
-});
-var slash           = require('express-slash');
 var config          = require("./config");
 var bodyParser      = require('body-parser');
 var morgan          = require('morgan');
@@ -33,6 +28,16 @@ app.use(bodyParser.urlencoded({extended:true, limit: '4mb'}));
 app.use(bodyParser.json({limit: '4mb'}));
 app.use(morgan('dev'));
 
+// take care of trailing slashes
+app.use(function(req, res, next) {
+    if (req.path.substr(-1) == '/' && req.path.length > 1) {
+        var query = req.url.slice(req.path.length);
+        res.redirect(301, req.path.slice(0, -1) + query);
+    } else {
+        next();
+    }
+});
+
 // connect directories to save in memory before app is run, makes filepaths simpler
 app.use(express.static(__dirname + '/'));
 app.use(express.static(__dirname + '/public'));
@@ -44,7 +49,6 @@ app.use(express.static(__dirname + '/JSON'));
 
 // route from "/alumnus"
 app.use('/alumnus', router);
-app.use(slash());
 
 // include API endpoints
 var routes = require("./routes/routes.js")(router);
