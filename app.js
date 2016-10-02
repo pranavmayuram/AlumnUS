@@ -26,6 +26,7 @@ var upload          = multer({dest: './uploads/',
 });
 
 // use commands
+app.enable('strict routing');
 app.use(bodyParser.urlencoded({extended:true, limit: '4mb'}));
 app.use(bodyParser.json({limit: '4mb'}));
 app.use(morgan('dev'));
